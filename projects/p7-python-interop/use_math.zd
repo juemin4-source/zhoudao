@@ -1,0 +1,6 @@
+引入Python模块《math》。
+从Python模块《math》中引入 sqrt。
+
+运行如下：
+设结果为sqrt（9）。
+显示结果。

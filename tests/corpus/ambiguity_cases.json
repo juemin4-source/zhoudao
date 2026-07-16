@@ -1,0 +1,2860 @@
+{
+  "meta": {
+    "version": "0.0.3",
+    "name": "周道歧义测试语料库",
+    "description": "265条歧义测试用例",
+    "total_cases": 265,
+    "date": "2026-07-16"
+  },
+  "categories": {
+    "ASSERTION_ERROR": {
+      "title": "断言约束",
+      "description": "7 cases",
+      "cases": [
+        {
+          "id": "AS001",
+          "code": "设年龄须不少于0。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "简单断言",
+          "interpretations": [
+            "simple assert"
+          ]
+        },
+        {
+          "id": "AS002",
+          "code": "设人数不得为负。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "否定断言",
+          "interpretations": [
+            "negative assert"
+          ]
+        },
+        {
+          "id": "AS003",
+          "code": "设总数须不少于0，否则报错【总数不能为负】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "断言+消息",
+          "interpretations": [
+            "assert msg"
+          ]
+        },
+        {
+          "id": "AS004",
+          "code": "设年龄须不大于100。",
+          "expected": "syntax_error",
+          "errorType": "语法错误",
+          "reason": "不大于不支持",
+          "interpretations": [
+            "not operator"
+          ]
+        },
+        {
+          "id": "AS005",
+          "code": "设年龄须不多于100。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "不多于标准",
+          "interpretations": [
+            "le operator"
+          ]
+        },
+        {
+          "id": "AS006",
+          "code": "设年龄须不少于0且年龄须不多于100。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "双断言",
+          "interpretations": [
+            "double assert"
+          ]
+        },
+        {
+          "id": "AS007",
+          "code": "设年龄须在0到120之间。",
+          "expected": "syntax_error",
+          "errorType": "语法错误",
+          "reason": "范围表达式不支持",
+          "interpretations": [
+            "range unsupported"
+          ]
+        }
+      ]
+    },
+    "CATEGORY": {
+      "title": "类别声明",
+      "description": "6 cases",
+      "cases": [
+        {
+          "id": "CT001",
+          "code": "设置用户类别，包括以下内容：名称、年龄。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "简单类别",
+          "interpretations": [
+            "simple category"
+          ]
+        },
+        {
+          "id": "CT002",
+          "code": "设置类别类别，包括以下内容：类别。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "同名不冲突",
+          "interpretations": [
+            "same name"
+          ]
+        },
+        {
+          "id": "CT003",
+          "code": "设置结果类别，包括以下内容：值，须为整数。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "约束字段",
+          "interpretations": [
+            "constraint field"
+          ]
+        },
+        {
+          "id": "CT004",
+          "code": "设置学生类别，包括以下内容：姓名，须为文本；成绩，须为整数，不得为负。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "多字段多约束",
+          "interpretations": [
+            "multi constraints"
+          ]
+        },
+        {
+          "id": "CT005",
+          "code": "设置订单类别，包括以下内容：总计，默认为0，须为整数，不得为负。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "默认值+约束",
+          "interpretations": [
+            "default+constraint"
+          ]
+        },
+        {
+          "id": "CT006",
+          "code": "设置选项类别，包括以下内容：名称；启用，默认为真；描述，可以没有值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "复杂字段",
+          "interpretations": [
+            "complex fields"
+          ]
+        }
+      ]
+    },
+    "CHAINED_EXPRESSION": {
+      "title": "链式表达式",
+      "description": "2 cases",
+      "cases": [
+        {
+          "id": "CE001",
+          "code": "如果甲小于乙小于丙，就显示【链】。",
+          "expected": "syntax_error",
+          "errorType": "语法错误",
+          "reason": "无链式比较",
+          "interpretations": [
+            "no chained"
+          ],
+          "resolution": "建议用且连接"
+        },
+        {
+          "id": "CE002",
+          "code": "如果甲小于乙且乙小于丙，就显示【范围内】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "且连接",
+          "interpretations": [
+            "AND connect"
+          ]
+        }
+      ]
+    },
+    "COMPLEX_SENTENCES": {
+      "title": "复杂句子",
+      "description": "12 cases",
+      "cases": [
+        {
+          "id": "CS001",
+          "code": "尝试显示【测试】，如果出错为错误，就显示错误内容，无论是否出错，最后显示【结束】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "完整try",
+          "interpretations": [
+            "full try"
+          ]
+        },
+        {
+          "id": "CS002",
+          "code": "设绝对值（数），如果数不少于0，就以数为所得，不然就以0减数为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "复式函数",
+          "interpretations": [
+            "multi func"
+          ]
+        },
+        {
+          "id": "CS003",
+          "code": "当数量大于0时，一直如果数量大于5，就显示【大】，不然就显示【小】，并使数量减1。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "when内if",
+          "interpretations": [
+            "while+if"
+          ]
+        },
+        {
+          "id": "CS004",
+          "code": "从名单中，每取一项记作姓名，就（如果姓名等于【李四】，就显示【找到了】，并跳出循环，不然就继续下一轮）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "for+括号",
+          "interpretations": [
+            "for+grouped"
+          ]
+        },
+        {
+          "id": "CS005",
+          "code": "依分数分情形：若为10，就显示【优】；若为8、9，就显示【良】；其余就显示【需努力】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "多值match",
+          "interpretations": [
+            "multi match"
+          ]
+        },
+        {
+          "id": "CS006",
+          "code": "引入《数学》。定义计算（）如下：设置结果类别，包括以下内容：值。以结果为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "混合",
+          "interpretations": [
+            "mixed"
+          ]
+        },
+        {
+          "id": "CS007",
+          "code": "设甲为1，设乙为2，设丙为甲加乙，使丙乘3，显示丙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "操作链",
+          "interpretations": [
+            "op chain"
+          ]
+        },
+        {
+          "id": "CS008",
+          "code": "定义异步任务（）如下：等待获取数据完成。以结果为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "异步定义",
+          "interpretations": [
+            "async def"
+          ]
+        },
+        {
+          "id": "CS009",
+          "code": "定义生成器（上限）如下：设计数为0，当计数小于上限时，一直依次给出计数，并使计数加1。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "生成器",
+          "interpretations": [
+            "generator"
+          ]
+        },
+        {
+          "id": "CS010",
+          "code": "尝试（显示【开始】），无论是否出错，最后显示【结束】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "try-finally",
+          "interpretations": [
+            "try-finally"
+          ]
+        },
+        {
+          "id": "CS011",
+          "code": "引入《数学》、《文本》。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "双模块",
+          "interpretations": [
+            "two imports"
+          ]
+        },
+        {
+          "id": "CS012",
+          "code": "设列表为［］。从列表中，每取一项记作x，就显示x。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "空列表遍历",
+          "interpretations": [
+            "empty for"
+          ]
+        }
+      ]
+    },
+    "CONTEXTUAL_KEYWORD": {
+      "title": "上下文关键字",
+      "description": "18 cases",
+      "cases": [
+        {
+          "id": "CK001",
+          "code": "设所得为值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "所得在设后是标识符",
+          "interpretations": [
+            "suode id"
+          ]
+        },
+        {
+          "id": "CK002",
+          "code": "以值为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "所得在为后是关键字",
+          "interpretations": [
+            "suode kw"
+          ]
+        },
+        {
+          "id": "CK003",
+          "code": "无论是否出错，最后显示【结束】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "最后在finally后是关键字",
+          "interpretations": [
+            "zuihou kw"
+          ]
+        },
+        {
+          "id": "CK004",
+          "code": "如果成立成立，就显示【真】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "第一个成立是标识符",
+          "interpretations": [
+            "chengli id"
+          ]
+        },
+        {
+          "id": "CK005",
+          "code": "引入《模块》，下文简称别名。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "下文简称是关键字",
+          "interpretations": [
+            "alias kw"
+          ]
+        },
+        {
+          "id": "CK006",
+          "code": "下文所用配置，均指全局的配置。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "作用域声明",
+          "interpretations": [
+            "scope decl"
+          ]
+        },
+        {
+          "id": "CK007",
+          "code": "设位于为方位词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "位于不是关键字",
+          "interpretations": [
+            "weiyu id"
+          ]
+        },
+        {
+          "id": "CK008",
+          "code": "设属于为关系。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "属于不是关键字",
+          "interpretations": [
+            "shuyu id"
+          ]
+        },
+        {
+          "id": "CK009",
+          "code": "设本身为代词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "本身在设后是标识符",
+          "interpretations": [
+            "self id"
+          ]
+        },
+        {
+          "id": "CK010",
+          "code": "设就是为等同。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "就是作标识符",
+          "interpretations": [
+            "is id"
+          ]
+        },
+        {
+          "id": "CK011",
+          "code": "设不是为否定。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "不是作标识符",
+          "interpretations": [
+            "isnot id"
+          ]
+        },
+        {
+          "id": "CK012",
+          "code": "设报错为动作。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "报错作标识符",
+          "interpretations": [
+            "raise id"
+          ]
+        },
+        {
+          "id": "CK013",
+          "code": "设暂定为状态。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "暂定不是关键字",
+          "interpretations": [
+            "zanding id"
+          ]
+        },
+        {
+          "id": "CK014",
+          "code": "尝试任务（），如果出错为错误，就显示错误。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "异常内引用错误",
+          "interpretations": [
+            "error in except"
+          ]
+        },
+        {
+          "id": "CK015",
+          "code": "尝试任务（），如果出错，就显示错误内容。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "异常内错误内容",
+          "interpretations": [
+            "errmsg in except"
+          ]
+        },
+        {
+          "id": "CK016",
+          "code": "如果出错为e，就显示e。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "异常命名",
+          "interpretations": [
+            "except as"
+          ]
+        },
+        {
+          "id": "CK017",
+          "code": "设{所得}为名称。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号上下文关键字",
+          "interpretations": [
+            "exact suode"
+          ]
+        },
+        {
+          "id": "CK018",
+          "code": "设{最后}为名称。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号最后",
+          "interpretations": [
+            "exact zuihou"
+          ]
+        }
+      ]
+    },
+    "CURLEY_BRACE": {
+      "title": "花括号精确名称",
+      "description": "11 cases",
+      "cases": [
+        {
+          "id": "CB001",
+          "code": "设{总数}为100。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "精确名称",
+          "interpretations": [
+            "exact total"
+          ]
+        },
+        {
+          "id": "CB002",
+          "code": "设{没有值}为空。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号转义关键字",
+          "interpretations": [
+            "exact meiyouzhi"
+          ]
+        },
+        {
+          "id": "CB003",
+          "code": "设{设}为关键字。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号完全关键字",
+          "interpretations": [
+            "exact she"
+          ]
+        },
+        {
+          "id": "CB004",
+          "code": "设{显示}为内置方法。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号关键字",
+          "interpretations": [
+            "exact xianshi"
+          ]
+        },
+        {
+          "id": "CB005",
+          "code": "显示{名称}。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号在表达式中",
+          "interpretations": [
+            "exact in expr"
+          ]
+        },
+        {
+          "id": "CB006",
+          "code": "设{a加b}为c。",
+          "expected": "syntax_error",
+          "errorType": "非法字符",
+          "reason": "花括号内含算符",
+          "interpretations": [
+            "invalid char"
+          ]
+        },
+        {
+          "id": "CB007",
+          "code": "设{真}为布尔。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号字面量",
+          "interpretations": [
+            "exact zhen"
+          ]
+        },
+        {
+          "id": "CB008",
+          "code": "设{就}为连词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号关键字",
+          "interpretations": [
+            "exact jiu"
+          ]
+        },
+        {
+          "id": "CB009",
+          "code": "设{特殊名称}为值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号多字",
+          "interpretations": [
+            "multi char"
+          ]
+        },
+        {
+          "id": "CB010",
+          "code": "设{A}为1。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "英文字母花括号",
+          "interpretations": [
+            "alpha exact"
+          ]
+        },
+        {
+          "id": "CB011",
+          "code": "设{_内部}为1。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "下划线花括号",
+          "interpretations": [
+            "underscore exact"
+          ]
+        }
+      ]
+    },
+    "DELETE_NAME": {
+      "title": "删除名称",
+      "description": "4 cases",
+      "cases": [
+        {
+          "id": "DN001",
+          "code": "设甲为1，删去甲，显示甲。",
+          "expected": "name_error",
+          "errorType": "未定义",
+          "reason": "删除后访问",
+          "interpretations": [
+            "deleted var"
+          ]
+        },
+        {
+          "id": "DN002",
+          "code": "设甲为1，删去甲，设甲为2。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "删除后重声明",
+          "interpretations": [
+            "redeclare"
+          ]
+        },
+        {
+          "id": "DN003",
+          "code": "设甲为1，删去甲，删去甲。",
+          "expected": "name_error",
+          "errorType": "未定义",
+          "reason": "两次删除",
+          "interpretations": [
+            "double delete"
+          ]
+        },
+        {
+          "id": "DN004",
+          "code": "删去不存在。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "删不存在",
+          "interpretations": [
+            "delete none"
+          ]
+        }
+      ]
+    },
+    "FUNCTION_CALL": {
+      "title": "函数调用",
+      "description": "8 cases",
+      "cases": [
+        {
+          "id": "FC001",
+          "code": "设平方（数）为数乘数，设结果为平方（5）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "函数定义和调用",
+          "interpretations": [
+            "func def+call"
+          ]
+        },
+        {
+          "id": "FC002",
+          "code": "定义计算（甲、乙）如下：以甲加乙为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "定义关键字函数",
+          "interpretations": [
+            "define func"
+          ]
+        },
+        {
+          "id": "FC003",
+          "code": "定义打印结果（甲）如下：显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "函数名含关键字",
+          "interpretations": [
+            "name with kw"
+          ]
+        },
+        {
+          "id": "FC004",
+          "code": "设f（a、b、c）为a加b加c。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "三参数",
+          "interpretations": [
+            "3 params"
+          ]
+        },
+        {
+          "id": "FC005",
+          "code": "设f（a）为a，设结果为f（f（10））。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "嵌套调用",
+          "interpretations": [
+            "nested call"
+          ]
+        },
+        {
+          "id": "FC006",
+          "code": "设f（x、y）为x乘y，设g（x）为f（x、x）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "函数调函数",
+          "interpretations": [
+            "func call func"
+          ]
+        },
+        {
+          "id": "FC007",
+          "code": "显示f（10、20）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "函数在print中",
+          "interpretations": [
+            "func in print"
+          ]
+        },
+        {
+          "id": "FC008",
+          "code": "设结果为f（g（h（10）））。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "深层嵌套",
+          "interpretations": [
+            "deep nested"
+          ]
+        }
+      ]
+    },
+    "IMPORT_NAMING": {
+      "title": "导入与别名",
+      "description": "6 cases",
+      "cases": [
+        {
+          "id": "IN001",
+          "code": "引入《数学》，下文简称数。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "模块别名",
+          "interpretations": [
+            "alias"
+          ]
+        },
+        {
+          "id": "IN002",
+          "code": "从《数学》中引入平方根、正弦。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "多名称引入",
+          "interpretations": [
+            "multi from"
+          ]
+        },
+        {
+          "id": "IN003",
+          "code": "引入《数学》，引入《数学》。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "模块重复",
+          "interpretations": [
+            "dup import"
+          ]
+        },
+        {
+          "id": "IN004",
+          "code": "从《系统》中引入输出、输入、错误。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "三名称",
+          "interpretations": [
+            "3 names"
+          ]
+        },
+        {
+          "id": "IN005",
+          "code": "引入《时间》。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "单引入",
+          "interpretations": [
+            "single import"
+          ]
+        },
+        {
+          "id": "IN006",
+          "code": "从《时间》中引入时间。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "同名引入",
+          "interpretations": [
+            "same name import"
+          ]
+        }
+      ]
+    },
+    "INVALID_NAME_CHARS": {
+      "title": "非法名称字符",
+      "description": "8 cases",
+      "cases": [
+        {
+          "id": "NC001",
+          "code": "设用户-名称为【张三】。",
+          "expected": "syntax_error",
+          "errorType": "词法错误",
+          "reason": "连字符",
+          "interpretations": [
+            "hyphen"
+          ]
+        },
+        {
+          "id": "NC002",
+          "code": "设用户.名称为【张三】。",
+          "expected": "syntax_error",
+          "errorType": "词法错误",
+          "reason": "点号",
+          "interpretations": [
+            "dot"
+          ]
+        },
+        {
+          "id": "NC003",
+          "code": "设3个为数量。",
+          "expected": "syntax_error",
+          "errorType": "词法错误",
+          "reason": "数字开头",
+          "interpretations": [
+            "digit start"
+          ]
+        },
+        {
+          "id": "NC004",
+          "code": "设_开头为私有。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "下划线合法",
+          "interpretations": [
+            "underscore ok"
+          ]
+        },
+        {
+          "id": "NC005",
+          "code": "设userName合法。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "英文名合法",
+          "interpretations": [
+            "english ok"
+          ]
+        },
+        {
+          "id": "NC006",
+          "code": "设版本2_3为标识符。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "混合字符",
+          "interpretations": [
+            "mixed ok"
+          ]
+        },
+        {
+          "id": "NC007",
+          "code": "设用户@名称为【张三】。",
+          "expected": "syntax_error",
+          "errorType": "词法错误",
+          "reason": "@符号",
+          "interpretations": [
+            "at sign"
+          ]
+        },
+        {
+          "id": "NC008",
+          "code": "设用户#名称为【张三】。",
+          "expected": "syntax_error",
+          "errorType": "词法错误",
+          "reason": "#符号",
+          "interpretations": [
+            "hash"
+          ]
+        }
+      ]
+    },
+    "KEYWORD_IDENTIFIER_CONFLICT": {
+      "title": "关键字标识符冲突",
+      "description": "8 cases",
+      "cases": [
+        {
+          "id": "KI001",
+          "code": "设类型为【文本】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "类型不是关键字",
+          "interpretations": [
+            "leixing id"
+          ]
+        },
+        {
+          "id": "KI002",
+          "code": "设类别为【测试】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "类别在设后是标识符",
+          "interpretations": [
+            "category id"
+          ]
+        },
+        {
+          "id": "KI003",
+          "code": "设就得为连接词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "就得是标识符",
+          "interpretations": [
+            "jiude id"
+          ]
+        },
+        {
+          "id": "KI004",
+          "code": "设{为}为介词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号关键字",
+          "interpretations": [
+            "wei as name"
+          ]
+        },
+        {
+          "id": "KI005",
+          "code": "设{使}为动词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号使",
+          "interpretations": [
+            "shi as name"
+          ]
+        },
+        {
+          "id": "KI006",
+          "code": "设{当}为连词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号当",
+          "interpretations": [
+            "dang as name"
+          ]
+        },
+        {
+          "id": "KI007",
+          "code": "设{从}为介词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号从",
+          "interpretations": [
+            "cong as name"
+          ]
+        },
+        {
+          "id": "KI008",
+          "code": "设{显示}为输出。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号显示",
+          "interpretations": [
+            "xianshi as name"
+          ]
+        }
+      ]
+    },
+    "LEXICAL_AMBIGUITY": {
+      "title": "词法歧义",
+      "description": "18 cases",
+      "cases": [
+        {
+          "id": "LA001",
+          "code": "设没有值为空。",
+          "expected": "ambiguity_error",
+          "errorType": "词法歧义",
+          "reason": "没有值vs标识符",
+          "interpretations": [
+            "meiyouzhi"
+          ],
+          "resolution": "使用花括号{没有值}或加为"
+        },
+        {
+          "id": "LA002",
+          "code": "设最后为100。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "最后是标识符",
+          "interpretations": [
+            "last as id"
+          ]
+        },
+        {
+          "id": "LA003",
+          "code": "显示所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "所得是标识符",
+          "interpretations": [
+            "suode as id"
+          ]
+        },
+        {
+          "id": "LA004",
+          "code": "设{没有值}为空。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号精确",
+          "interpretations": [
+            "exact meiyouzhi"
+          ]
+        },
+        {
+          "id": "LA005",
+          "code": "设{设}为关键字。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号关键字",
+          "interpretations": [
+            "exact she"
+          ]
+        },
+        {
+          "id": "LA006",
+          "code": "设{如果}为条件关键字。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号如果",
+          "interpretations": [
+            "exact ruguo"
+          ]
+        },
+        {
+          "id": "LA007",
+          "code": "设{真}为布尔。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号字面量",
+          "interpretations": [
+            "exact zhen"
+          ]
+        },
+        {
+          "id": "LA008",
+          "code": "设{假}为布尔。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号字面量2",
+          "interpretations": [
+            "exact jia"
+          ]
+        },
+        {
+          "id": "LA009",
+          "code": "设{变为}为变化词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号变为",
+          "interpretations": [
+            "exact bianwei"
+          ]
+        },
+        {
+          "id": "LA010",
+          "code": "设{就}为连词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号就",
+          "interpretations": [
+            "exact jiu"
+          ]
+        },
+        {
+          "id": "LA011",
+          "code": "设{属于}为动词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号普通词",
+          "interpretations": [
+            "exact shuyu"
+          ]
+        },
+        {
+          "id": "LA012",
+          "code": "设大于为比较。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "大于作标识符",
+          "interpretations": [
+            "dayu as id"
+          ]
+        },
+        {
+          "id": "LA013",
+          "code": "设不等于为算符。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "不等于作标识符",
+          "interpretations": [
+            "budengyu as id"
+          ]
+        },
+        {
+          "id": "LA014",
+          "code": "设{完成}为状态。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号完成",
+          "interpretations": [
+            "exact wancheng"
+          ]
+        },
+        {
+          "id": "LA015",
+          "code": "设{错误}为异常名。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号错误",
+          "interpretations": [
+            "exact error"
+          ]
+        },
+        {
+          "id": "LA016",
+          "code": "设{内容}为字段。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号内容",
+          "interpretations": [
+            "exact content"
+          ]
+        },
+        {
+          "id": "LA017",
+          "code": "设{一直}为副词。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号一直",
+          "interpretations": [
+            "exact yizhi"
+          ]
+        },
+        {
+          "id": "LA018",
+          "code": "设{显示}为输出。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号显示",
+          "interpretations": [
+            "exact xianshi"
+          ]
+        }
+      ]
+    },
+    "MATCH_DUPLICATE": {
+      "title": "分情形重复检查",
+      "description": "5 cases",
+      "cases": [
+        {
+          "id": "MD001",
+          "code": "依数值分情形：若为1，就显示【一】；若为1，就显示【另一个一】。",
+          "expected": "name_error",
+          "errorType": "重复字面量",
+          "reason": "重复1",
+          "interpretations": [
+            "dup literal"
+          ]
+        },
+        {
+          "id": "MD002",
+          "code": "依数值分情形：若为【同】，就显示A；若为【同】，就显示B。",
+          "expected": "name_error",
+          "errorType": "重复字面量",
+          "reason": "文本重复",
+          "interpretations": [
+            "dup string"
+          ]
+        },
+        {
+          "id": "MD003",
+          "code": "依数值分情形：若为真，就显示【是】；若为假，就显示【否】；其余就显示【未知】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "布尔match",
+          "interpretations": [
+            "bool match"
+          ]
+        },
+        {
+          "id": "MD004",
+          "code": "依数值分情形：其余就显示【默认】；若为1，就显示【一】。",
+          "expected": "syntax_error",
+          "errorType": "分支顺序错误",
+          "reason": "其余不最后",
+          "interpretations": [
+            "default not last"
+          ]
+        },
+        {
+          "id": "MD005",
+          "code": "依值分情形：若为1.5，就显示【小数】；若为2，就显示【整数】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "小数match",
+          "interpretations": [
+            "float match"
+          ]
+        }
+      ]
+    },
+    "MISCELLANEOUS": {
+      "title": "其他",
+      "description": "18 cases",
+      "cases": [
+        {
+          "id": "MI001",
+          "code": "设x为1。定义f（）如下：设x为2。以x为所得。显示x。以x为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "全局vs局部同名",
+          "interpretations": [
+            "global vs local"
+          ]
+        },
+        {
+          "id": "MI002",
+          "code": "设x为1。设y为x。显示y。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "简单引用",
+          "interpretations": [
+            "simple ref"
+          ]
+        },
+        {
+          "id": "MI003",
+          "code": "显示3大于2。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "比较无如果",
+          "interpretations": [
+            "compare no if"
+          ]
+        },
+        {
+          "id": "MI004",
+          "code": "显示并非（真且假）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "逻辑表达式",
+          "interpretations": [
+            "logic expr"
+          ]
+        },
+        {
+          "id": "MI005",
+          "code": "设结果为真或假。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "布尔绑定",
+          "interpretations": [
+            "bool bind"
+          ]
+        },
+        {
+          "id": "MI006",
+          "code": "显示［1、2、3］。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "打印列表",
+          "interpretations": [
+            "print list"
+          ]
+        },
+        {
+          "id": "MI007",
+          "code": "设x为100。如果x不等于0，就显示【非零】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "不等于",
+          "interpretations": [
+            "not equal"
+          ]
+        },
+        {
+          "id": "MI008",
+          "code": "设x为【文本】。显示x。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "文本绑定输出",
+          "interpretations": [
+            "string"
+          ]
+        },
+        {
+          "id": "MI009",
+          "code": "当条件时，一直（设x为1，设y为2，显示x加y）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "while括号分组",
+          "interpretations": [
+            "while grouped"
+          ]
+        },
+        {
+          "id": "MI010",
+          "code": "设甲为10。定义乙（）如下：以甲为所得。设结果为乙（）。显示结果。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "闭包函数",
+          "interpretations": [
+            "closure func"
+          ]
+        },
+        {
+          "id": "MI011",
+          "code": "如果甲大于5或甲小于3且甲不等于0，就显示【边界】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "复杂逻辑",
+          "interpretations": [
+            "complex logic"
+          ]
+        },
+        {
+          "id": "MI012",
+          "code": "设甲为1。使甲变为2。删去甲。设甲为3。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "删除后重建",
+          "interpretations": [
+            "delete then bind"
+          ]
+        },
+        {
+          "id": "MI013",
+          "code": "定义测试（）如下：设甲为［1、2、3］。从甲中，每取一项记作x，就显示x。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "函数内列表遍历",
+          "interpretations": [
+            "func for"
+          ]
+        },
+        {
+          "id": "MI014",
+          "code": "设甲为10，设乙为甲除2，显示乙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "算术引用",
+          "interpretations": [
+            "arith ref"
+          ]
+        },
+        {
+          "id": "MI015",
+          "code": "设x为【取值A】。如果x就是【取值A】，就显示【匹配】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "身份判断",
+          "interpretations": [
+            "is compare"
+          ]
+        },
+        {
+          "id": "MI016",
+          "code": "设x为【取值A】。如果x不是【取值A】本身，就显示【不匹配】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "否定身份",
+          "interpretations": [
+            "is not"
+          ]
+        },
+        {
+          "id": "MI017",
+          "code": "定义测试（）如下：设甲为【初始】。显示甲。使甲变为【修改】。显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "函数内多动作",
+          "interpretations": [
+            "func multi action"
+          ]
+        },
+        {
+          "id": "MI018",
+          "code": "设a为100，设b为200，如果a等于b，就显示【相等】，不然就显示【不等】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "全流程",
+          "interpretations": [
+            "full flow"
+          ]
+        }
+      ]
+    },
+    "MULTIPLE_ACTIONS": {
+      "title": "多动作序列",
+      "description": "5 cases",
+      "cases": [
+        {
+          "id": "MA001",
+          "code": "设甲为1，使甲变为2，显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "动作链",
+          "interpretations": [
+            "action chain"
+          ]
+        },
+        {
+          "id": "MA002",
+          "code": "设甲为1，使甲加1，使甲乘2，显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "算术链",
+          "interpretations": [
+            "aug chain"
+          ]
+        },
+        {
+          "id": "MA003",
+          "code": "设甲为1，使甲加2，使甲乘3，使甲减4，使甲除5，显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "长链",
+          "interpretations": [
+            "long chain"
+          ]
+        },
+        {
+          "id": "MA004",
+          "code": "设甲为真，使甲不成立，使甲成立，显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "布尔toggle链",
+          "interpretations": [
+            "bool toggle"
+          ]
+        },
+        {
+          "id": "MA005",
+          "code": "设甲为0，使甲变为10，设乙为甲乘2，显示乙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "混合链",
+          "interpretations": [
+            "mixed chain"
+          ]
+        }
+      ]
+    },
+    "NAME_DUPLICATE_SAME_SCOPE": {
+      "title": "同域重名",
+      "description": "15 cases",
+      "cases": [
+        {
+          "id": "ND001",
+          "code": "设甲为1，设甲为2。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "两次声明",
+          "interpretations": [
+            "dup"
+          ]
+        },
+        {
+          "id": "ND002",
+          "code": "设结果为10，设结果为20。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "两次声明",
+          "interpretations": [
+            "dup"
+          ]
+        },
+        {
+          "id": "ND003",
+          "code": "定义甲（）如下：设乙为1。定义甲（）如下：设乙为2。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "函数名重复",
+          "interpretations": [
+            "func dup"
+          ]
+        },
+        {
+          "id": "ND004",
+          "code": "设置用户类别，包括以下内容：名称，须为文本；名称，须为整数。",
+          "expected": "name_error",
+          "errorType": "重复字段",
+          "reason": "字段重复",
+          "interpretations": [
+            "field dup"
+          ]
+        },
+        {
+          "id": "ND005",
+          "code": "定义计算（甲、甲）如下：以甲为所得。",
+          "expected": "name_error",
+          "errorType": "重复参数",
+          "reason": "参数重复",
+          "interpretations": [
+            "param dup"
+          ]
+        },
+        {
+          "id": "ND006",
+          "code": "设计数为1，使计数变为2，设计数为3。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "重设",
+          "interpretations": [
+            "re-bind"
+          ]
+        },
+        {
+          "id": "ND007",
+          "code": "引入《甲》，定义甲（）如下：显示【甲】。",
+          "expected": "name_error",
+          "errorType": "名称冲突",
+          "reason": "模块vs函数",
+          "interpretations": [
+            "module vs func"
+          ]
+        },
+        {
+          "id": "ND008",
+          "code": "设最大值100，设最大值200。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "同句重名",
+          "interpretations": [
+            "same sentence"
+          ]
+        },
+        {
+          "id": "ND009",
+          "code": "定义甲（乙）如下：设乙为10，以乙为所得。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "形参vs局部",
+          "interpretations": [
+            "param vs local"
+          ]
+        },
+        {
+          "id": "ND010",
+          "code": "设值为1，设值为2，设值为3。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "三次声明",
+          "interpretations": [
+            "triple"
+          ]
+        },
+        {
+          "id": "ND011",
+          "code": "设a为1，设a为2。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "同名a",
+          "interpretations": [
+            "dupa"
+          ]
+        },
+        {
+          "id": "ND012",
+          "code": "设b为1，设b为2。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "同名b",
+          "interpretations": [
+            "dupb"
+          ]
+        },
+        {
+          "id": "ND013",
+          "code": "设c为1，设c为2。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "同名c",
+          "interpretations": [
+            "dupc"
+          ]
+        },
+        {
+          "id": "ND014",
+          "code": "设d为1，设d为2。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "同名d",
+          "interpretations": [
+            "dupd"
+          ]
+        },
+        {
+          "id": "ND015",
+          "code": "设e为1，设e为2。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "同名e",
+          "interpretations": [
+            "dupe"
+          ]
+        }
+      ]
+    },
+    "NAME_OMISSION": {
+      "title": "名称省略歧义",
+      "description": "3 cases",
+      "cases": [
+        {
+          "id": "NO001",
+          "code": "如果任务完成，就显示【完成】。",
+          "expected": "ambiguity_error",
+          "errorType": "省略歧义",
+          "reason": "完成是变量还是命题？",
+          "interpretations": [
+            "var or pred?"
+          ],
+          "resolution": "建议写「如果任务完成成立」"
+        },
+        {
+          "id": "NO002",
+          "code": "如果任务完成成立，就显示【完成】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "显式命题",
+          "interpretations": [
+            "explicit pred"
+          ]
+        },
+        {
+          "id": "NO003",
+          "code": "当计数时，一直处理。",
+          "expected": "ambiguity_error",
+          "errorType": "省略歧义",
+          "reason": "计数后缺条件",
+          "interpretations": [
+            "missing condition"
+          ],
+          "resolution": "建议写「当计数大于0时」"
+        }
+      ]
+    },
+    "NESTED_SCOPE_NAME": {
+      "title": "嵌套作用域",
+      "description": "5 cases",
+      "cases": [
+        {
+          "id": "NS001",
+          "code": "定义外层（）如下：设甲为1。定义内层（）如下：设甲为2。以甲为所得。以甲为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "内层遮蔽",
+          "interpretations": [
+            "shadow inner"
+          ]
+        },
+        {
+          "id": "NS002",
+          "code": "定义外层（）如下：定义内层（）如下：下文所用值，指本定义外层的值。设值为外层设的值。以值为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "nonlocal",
+          "interpretations": [
+            "nonlocal"
+          ]
+        },
+        {
+          "id": "NS003",
+          "code": "定义a（）如下：设x为1。定义b（）如下：定义c（）如下：设x为3。以x为所得。以x为所得。以x为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "三层嵌套",
+          "interpretations": [
+            "3 level"
+          ]
+        },
+        {
+          "id": "NS004",
+          "code": "定义a（）如下：设x为1。定义b（）如下：设x为2。以x为所得。以x为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "双层同名",
+          "interpretations": [
+            "2 level"
+          ]
+        },
+        {
+          "id": "NS005",
+          "code": "定义a（）如下：设v为1。定义b（）如下：下文所用v，指本定义外层的v。设v为2。以v为所得。以v为所得。显示v。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "nonlocal证明",
+          "interpretations": [
+            "nonlocal demo"
+          ]
+        }
+      ]
+    },
+    "NONE_DUAL_ROLE": {
+      "title": "没有值双重角色",
+      "description": "6 cases",
+      "cases": [
+        {
+          "id": "NR001",
+          "code": "设查询结果没有值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "空值绑定",
+          "interpretations": [
+            "bind none"
+          ]
+        },
+        {
+          "id": "NR002",
+          "code": "如果查询结果没有值，就显示【空】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "空值判断",
+          "interpretations": [
+            "if none"
+          ]
+        },
+        {
+          "id": "NR003",
+          "code": "设查询结果为没有值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "为后空值",
+          "interpretations": [
+            "bind none literal"
+          ]
+        },
+        {
+          "id": "NR004",
+          "code": "设查询结果为没有值。如果查询结果就是没有值，就显示【空】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "就是+没有值",
+          "interpretations": [
+            "is none"
+          ]
+        },
+        {
+          "id": "NR005",
+          "code": "设甲为没有值。设乙为没有值。如果甲等于乙，就显示【相等】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "两空值",
+          "interpretations": [
+            "two nones"
+          ]
+        },
+        {
+          "id": "NR006",
+          "code": "如果甲没有值且乙没有值，就显示【都空】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "且+双空值",
+          "interpretations": [
+            "and two nones"
+          ]
+        }
+      ]
+    },
+    "PRECEDENCE": {
+      "title": "表达式优先级",
+      "description": "22 cases",
+      "cases": [
+        {
+          "id": "PR001",
+          "code": "显示3加4乘5。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "乘优先",
+          "interpretations": [
+            "3+(4*5)=23"
+          ]
+        },
+        {
+          "id": "PR002",
+          "code": "显示（3加4）乘5。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号覆盖",
+          "interpretations": [
+            "(3+4)*5=35"
+          ]
+        },
+        {
+          "id": "PR003",
+          "code": "显示减3加4。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "前缀优先",
+          "interpretations": [
+            "(-3)+4=1"
+          ]
+        },
+        {
+          "id": "PR004",
+          "code": "显示减（3加4）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号符号",
+          "interpretations": [
+            "-(3+4)=-7"
+          ]
+        },
+        {
+          "id": "PR005",
+          "code": "如果甲大于5且甲小于10，就显示【中间】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "比较>且",
+          "interpretations": [
+            "a>5 AND a<10"
+          ]
+        },
+        {
+          "id": "PR006",
+          "code": "显示10乘（2加3）减5。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号优先",
+          "interpretations": [
+            "(10*5)-5=45"
+          ]
+        },
+        {
+          "id": "PR007",
+          "code": "显示3乘减4。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "前缀优先于乘",
+          "interpretations": [
+            "3*(-4)=-12"
+          ]
+        },
+        {
+          "id": "PR008",
+          "code": "真或假且真或假。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "且优先",
+          "interpretations": [
+            "T OR (F AND T) OR F"
+          ]
+        },
+        {
+          "id": "PR009",
+          "code": "显示100整除3乘4。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "左结合",
+          "interpretations": [
+            "(100//3)*4=132"
+          ]
+        },
+        {
+          "id": "PR010",
+          "code": "如果甲就是乙且丙就是丁，就显示【相同】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "身份>且",
+          "interpretations": [
+            "(IS) AND (IS)"
+          ]
+        },
+        {
+          "id": "PR011",
+          "code": "并非（甲等于乙）或（丙等于丁）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "非绑定括号",
+          "interpretations": [
+            "NOT() OR ()"
+          ]
+        },
+        {
+          "id": "PR012",
+          "code": "设结果为甲加乙减丙乘丁。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "混合算术",
+          "interpretations": [
+            "a+b-(c*d)"
+          ]
+        },
+        {
+          "id": "PR013",
+          "code": "设结果为甲乘乙加丙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "乘优先加",
+          "interpretations": [
+            "(a*b)+c"
+          ]
+        },
+        {
+          "id": "PR014",
+          "code": "如果甲在名单中或乙在名单中且丙在名单中，就显示。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "成员>且>或",
+          "interpretations": [
+            "IN OR (IN AND IN)"
+          ]
+        },
+        {
+          "id": "PR015",
+          "code": "显示3除2乘4。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "左结合除乘",
+          "interpretations": [
+            "(3/2)*4"
+          ]
+        },
+        {
+          "id": "PR016",
+          "code": "显示100余3乘5。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "乘优先余",
+          "interpretations": [
+            "100%(3*5)"
+          ]
+        },
+        {
+          "id": "PR017",
+          "code": "设结果为甲就是乙或丙就是丁。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "身份>或",
+          "interpretations": [
+            "IS OR IS"
+          ]
+        },
+        {
+          "id": "PR018",
+          "code": "显示减3加减4。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "前缀结合",
+          "interpretations": [
+            "(-3)+(-4)"
+          ]
+        },
+        {
+          "id": "PR019",
+          "code": "显示10乘减2加5。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "前缀>乘>加",
+          "interpretations": [
+            "(10*(-2))+5"
+          ]
+        },
+        {
+          "id": "PR020",
+          "code": "显示减甲乘乙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "前缀>乘",
+          "interpretations": [
+            "-(a*b)"
+          ]
+        },
+        {
+          "id": "PR021",
+          "code": "显示减甲加乙乘丙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "前缀>乘>加",
+          "interpretations": [
+            "(-a)+(b*c)"
+          ]
+        },
+        {
+          "id": "PR022",
+          "code": "显示减（甲加乙）乘丙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号改变",
+          "interpretations": [
+            "(-(a+b))*c"
+          ]
+        }
+      ]
+    },
+    "PUNCTUATION": {
+      "title": "标点符号",
+      "description": "21 cases",
+      "cases": [
+        {
+          "id": "PU001",
+          "code": "【文本内容】",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "尖头括号文本",
+          "interpretations": [
+            "string"
+          ]
+        },
+        {
+          "id": "PU002",
+          "code": "［1、2、3］",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "全角方括号列表",
+          "interpretations": [
+            "list"
+          ]
+        },
+        {
+          "id": "PU003",
+          "code": "《模块名》",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "书名号模块",
+          "interpretations": [
+            "module"
+          ]
+        },
+        {
+          "id": "PU004",
+          "code": "（3加4）乘5",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号分组",
+          "interpretations": [
+            "group"
+          ]
+        },
+        {
+          "id": "PU005",
+          "code": "设{用户名}为【张三】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "花括号精确",
+          "interpretations": [
+            "exact name"
+          ]
+        },
+        {
+          "id": "PU006",
+          "code": "设置用户类别，包括以下内容：名称，须为文本；年龄，须为整数。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "分号字段",
+          "interpretations": [
+            "semicolon"
+          ]
+        },
+        {
+          "id": "PU007",
+          "code": "依数值分情形：若为1，就显示【一】；若为2，就显示【二】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "分情形分号",
+          "interpretations": [
+            "match semi"
+          ]
+        },
+        {
+          "id": "PU008",
+          "code": "尝试（显示【开始】），如果出错，就显示【错误】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号内try",
+          "interpretations": [
+            "try paren"
+          ]
+        },
+        {
+          "id": "PU009",
+          "code": "设甲为1。设乙为2。显示甲加乙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "三个独立句子",
+          "interpretations": [
+            "3 sentences"
+          ]
+        },
+        {
+          "id": "PU010",
+          "code": "如果条件成立，就（设甲为1，并显示甲），不然就显示【否】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号分组动作",
+          "interpretations": [
+            "grouped actions"
+          ]
+        },
+        {
+          "id": "PU011",
+          "code": "设值为100。设值为200。",
+          "expected": "name_error",
+          "errorType": "重复定义",
+          "reason": "跨句重名",
+          "interpretations": [
+            "cross dup"
+          ]
+        },
+        {
+          "id": "PU012",
+          "code": "如果成立成立，就显示【成立】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "成立在两种角色",
+          "interpretations": [
+            "chengli bi-role"
+          ]
+        },
+        {
+          "id": "PU013",
+          "code": "设｛用户名｝为【张三】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "全角花括号",
+          "interpretations": [
+            "fullwidth braces"
+          ]
+        },
+        {
+          "id": "PU014",
+          "code": "设{ }为空格名。",
+          "expected": "syntax_error",
+          "errorType": "非法标识符",
+          "reason": "花括号空格",
+          "interpretations": [
+            "space only"
+          ]
+        },
+        {
+          "id": "PU015",
+          "code": "设{}为空白。",
+          "expected": "syntax_error",
+          "errorType": "非法标识符",
+          "reason": "空花括号",
+          "interpretations": [
+            "empty braces"
+          ]
+        },
+        {
+          "id": "PU016",
+          "code": "显示3.14。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "小数点和句号区分",
+          "interpretations": [
+            "dot vs period"
+          ]
+        },
+        {
+          "id": "PU017",
+          "code": "依甲分情形：若为【一】，就显示1；其余就显示0。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "文本分情形",
+          "interpretations": [
+            "string match"
+          ]
+        },
+        {
+          "id": "PU018",
+          "code": "句中含有。【句号测试】",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "文本中句号",
+          "interpretations": [
+            "period in string"
+          ]
+        },
+        {
+          "id": "PU019",
+          "code": "（3加4）乘5",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号表达式分组",
+          "interpretations": [
+            "paren group"
+          ]
+        },
+        {
+          "id": "PU020",
+          "code": "设年龄为16，如果年龄不少于18，不然就显示【未成年】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "逗号分隔",
+          "interpretations": [
+            "comma sep"
+          ]
+        },
+        {
+          "id": "PU021",
+          "code": "尝试（显示【开始】），如果出错，就显示【错误】；无论是否出错，最后显示【结束】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "分号异常边界",
+          "interpretations": [
+            "except semi"
+          ]
+        }
+      ]
+    },
+    "RECURSIVE_DEFINITION": {
+      "title": "递归定义",
+      "description": "4 cases",
+      "cases": [
+        {
+          "id": "RC001",
+          "code": "定义阶乘（n）如下：如果n等于1，就以1为所得，不然就以n乘阶乘（n减1）为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "递归阶乘",
+          "interpretations": [
+            "factorial"
+          ]
+        },
+        {
+          "id": "RC002",
+          "code": "定义甲（）如下：乙（）。定义乙（）如下：甲（）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "交叉递归",
+          "interpretations": [
+            "mutual recursion"
+          ]
+        },
+        {
+          "id": "RC003",
+          "code": "定义无限（）如下：无限（）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "直接递归",
+          "interpretations": [
+            "direct recursion"
+          ]
+        },
+        {
+          "id": "RC004",
+          "code": "定义fib（n）如下：如果n等于0或n等于1，就以n为所得，不然就以fib（n减1）加fib（n减2）为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "斐波那契",
+          "interpretations": [
+            "fibonacci"
+          ]
+        }
+      ]
+    },
+    "SCOPE_VIOLATION": {
+      "title": "作用域违规",
+      "description": "17 cases",
+      "cases": [
+        {
+          "id": "SV001",
+          "code": "定义内层（）如下：设内部值为1。显示内部值。",
+          "expected": "scope_error",
+          "errorType": "未定义",
+          "reason": "内部值外部访问",
+          "interpretations": [
+            "inner out"
+          ]
+        },
+        {
+          "id": "SV002",
+          "code": "跳出循环。",
+          "expected": "scope_error",
+          "errorType": "作用域越界",
+          "reason": "break外",
+          "interpretations": [
+            "break out"
+          ]
+        },
+        {
+          "id": "SV003",
+          "code": "继续下一轮。",
+          "expected": "scope_error",
+          "errorType": "作用域越界",
+          "reason": "continue外",
+          "interpretations": [
+            "continue out"
+          ]
+        },
+        {
+          "id": "SV004",
+          "code": "显示未定义变量。",
+          "expected": "name_error",
+          "errorType": "未定义",
+          "reason": "未声明",
+          "interpretations": [
+            "undefined"
+          ]
+        },
+        {
+          "id": "SV005",
+          "code": "显示错误。",
+          "expected": "scope_error",
+          "errorType": "作用域越界",
+          "reason": "错误外",
+          "interpretations": [
+            "error out"
+          ]
+        },
+        {
+          "id": "SV006",
+          "code": "报错【测试】。",
+          "expected": "scope_error",
+          "errorType": "作用域越界",
+          "reason": "报错外",
+          "interpretations": [
+            "raise out"
+          ]
+        },
+        {
+          "id": "SV007",
+          "code": "依次给出10。",
+          "expected": "scope_error",
+          "errorType": "作用域越界",
+          "reason": "yield外",
+          "interpretations": [
+            "yield out"
+          ]
+        },
+        {
+          "id": "SV008",
+          "code": "设计数为0。定义外层（）如下：下文所用计数，均指全局的计数。设计数为1。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "全局跨越",
+          "interpretations": [
+            "global cross"
+          ]
+        },
+        {
+          "id": "SV009",
+          "code": "设甲为10。定义乙（）如下：设甲为20。以甲为所得。显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "同名不冲突",
+          "interpretations": [
+            "scope ok"
+          ]
+        },
+        {
+          "id": "SV010",
+          "code": "定义f（）如下：下文所用x，指本定义外层的x。以x为所得。",
+          "expected": "name_error",
+          "errorType": "未定义",
+          "reason": "nonlocal不存在",
+          "interpretations": [
+            "nonlocal none"
+          ]
+        },
+        {
+          "id": "SV011",
+          "code": "定义a（）如下：设v为1。定义b（）如下：设v为2。显示v。以v为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "嵌套遮蔽",
+          "interpretations": [
+            "shadow"
+          ]
+        },
+        {
+          "id": "SV012",
+          "code": "下文所用x，均指全局的x。定义f（）如下：下文所用x，指本定义外层的x。",
+          "expected": "scope_error",
+          "errorType": "跨越冲突",
+          "reason": "同时global/nonlocal",
+          "interpretations": [
+            "cross conflict"
+          ]
+        },
+        {
+          "id": "SV013",
+          "code": "设全局a为1。定义f（）如下：下文所用a，均指全局的a。设a为2。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "全局跨越修改",
+          "interpretations": [
+            "global modify"
+          ]
+        },
+        {
+          "id": "SV014",
+          "code": "设x为1。定义f（）如下：设y为2。以x为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "闭包访问",
+          "interpretations": [
+            "closure"
+          ]
+        },
+        {
+          "id": "SV015",
+          "code": "定义a（）如下：设v为1。定义b（）如下：定义c（）如下：设v为3。以v为所得。以v为所得。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "三层嵌套",
+          "interpretations": [
+            "3 nested"
+          ]
+        },
+        {
+          "id": "SV016",
+          "code": "定义f（）如下：下文所用x，指本定义外层的x。",
+          "expected": "scope_error",
+          "errorType": "未定义",
+          "reason": "nonlocal不存在",
+          "interpretations": [
+            "no nonlocal"
+          ]
+        },
+        {
+          "id": "SV017",
+          "code": "设全局a为1。定义f（）如下：下文所用a，均指全局的a。设a为2。显示a。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "global跨越",
+          "interpretations": [
+            "global cross"
+          ]
+        }
+      ]
+    },
+    "STATUS_PREDICATE": {
+      "title": "命题判断",
+      "description": "9 cases",
+      "cases": [
+        {
+          "id": "SP001",
+          "code": "如果用户登录成立，就显示【欢迎】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "命题判断",
+          "interpretations": [
+            "pred true"
+          ]
+        },
+        {
+          "id": "SP002",
+          "code": "如果用户登录不成立，就显示【请登录】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "否定命题",
+          "interpretations": [
+            "pred false"
+          ]
+        },
+        {
+          "id": "SP003",
+          "code": "设用户登录成立。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "命题绑定",
+          "interpretations": [
+            "bind bool true"
+          ]
+        },
+        {
+          "id": "SP004",
+          "code": "使用户登录成立。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "命题变更",
+          "interpretations": [
+            "assign bool true"
+          ]
+        },
+        {
+          "id": "SP005",
+          "code": "如果甲成立且乙成立，就显示【都成立】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "复合命题",
+          "interpretations": [
+            "compound pred"
+          ]
+        },
+        {
+          "id": "SP006",
+          "code": "如果甲成立或乙成立，就显示【部分成立】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "或命题",
+          "interpretations": [
+            "or pred"
+          ]
+        },
+        {
+          "id": "SP007",
+          "code": "如果并非（甲成立），就显示【甲不成立】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "否定命题",
+          "interpretations": [
+            "not pred"
+          ]
+        },
+        {
+          "id": "SP008",
+          "code": "设甲成立，使甲不成立，使甲成立。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "布尔toggle",
+          "interpretations": [
+            "bool toggle"
+          ]
+        },
+        {
+          "id": "SP009",
+          "code": "如果甲成立或乙成立且丙成立，就显示【复合】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "且优先于或",
+          "interpretations": [
+            "and before or"
+          ]
+        }
+      ]
+    },
+    "SYNTACTIC_AMBIGUITY": {
+      "title": "句法结构",
+      "description": "23 cases",
+      "cases": [
+        {
+          "id": "SA001",
+          "code": "设甲没有值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "空值绑定",
+          "interpretations": [
+            "bind none"
+          ]
+        },
+        {
+          "id": "SA002",
+          "code": "如果甲没有值，就显示【空】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "空值判断",
+          "interpretations": [
+            "if none"
+          ]
+        },
+        {
+          "id": "SA003",
+          "code": "设甲（乙）为丙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "函数定义",
+          "interpretations": [
+            "func def"
+          ]
+        },
+        {
+          "id": "SA004",
+          "code": "使甲变为乙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "变更",
+          "interpretations": [
+            "assign"
+          ]
+        },
+        {
+          "id": "SA005",
+          "code": "使甲加乙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "算术变更",
+          "interpretations": [
+            "aug add"
+          ]
+        },
+        {
+          "id": "SA006",
+          "code": "使甲成立。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "布尔变更",
+          "interpretations": [
+            "bool assign"
+          ]
+        },
+        {
+          "id": "SA007",
+          "code": "如果甲成立，就显示【真】。不然就显示【假】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "标准如果",
+          "interpretations": [
+            "if else"
+          ]
+        },
+        {
+          "id": "SA008",
+          "code": "当条件时，一直显示【循环】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "当循环",
+          "interpretations": [
+            "while"
+          ]
+        },
+        {
+          "id": "SA009",
+          "code": "从名单中，每取一项记作姓名，就显示姓名。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "遍历",
+          "interpretations": [
+            "for"
+          ]
+        },
+        {
+          "id": "SA010",
+          "code": "尝试读取文件（【test.txt】），如果出错，就显示【失败】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "尝试",
+          "interpretations": [
+            "try"
+          ]
+        },
+        {
+          "id": "SA011",
+          "code": "依数值分情形：若为1，就显示【一】；若为2，就显示【二】；其余就显示【其他】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "分情形",
+          "interpretations": [
+            "match"
+          ]
+        },
+        {
+          "id": "SA012",
+          "code": "显示（3加4）乘5。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "括号改变优先级",
+          "interpretations": [
+            "parens"
+          ]
+        },
+        {
+          "id": "SA013",
+          "code": "显示3加4乘5。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "默认优先级",
+          "interpretations": [
+            "precedence"
+          ]
+        },
+        {
+          "id": "SA014",
+          "code": "当计数大于0时，一直显示计数，并使计数减1。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "当循环完整",
+          "interpretations": [
+            "while full"
+          ]
+        },
+        {
+          "id": "SA015",
+          "code": "定义计算（甲、乙）如下：以甲加乙为所得。设结果为计算（3、4）。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "完整函数",
+          "interpretations": [
+            "func full"
+          ]
+        },
+        {
+          "id": "SA016",
+          "code": "设甲为1，设乙为2，设丙为甲加乙。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "三个绑定",
+          "interpretations": [
+            "3 binds"
+          ]
+        },
+        {
+          "id": "SA017",
+          "code": "使甲变为3。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "简单变更",
+          "interpretations": [
+            "simple assign"
+          ]
+        },
+        {
+          "id": "SA018",
+          "code": "使甲加1。使甲减1。使甲乘2。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "增量链",
+          "interpretations": [
+            "aug chain"
+          ]
+        },
+        {
+          "id": "SA019",
+          "code": "设甲为1，使甲成立。设甲为1，使甲不成立。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "布尔变更链",
+          "interpretations": [
+            "bool chain"
+          ]
+        },
+        {
+          "id": "SA020",
+          "code": "如果甲成立，就显示【真】。不然，如果乙成立，就显示【乙】。不然就显示【其他】。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "elif链",
+          "interpretations": [
+            "elif chain"
+          ]
+        },
+        {
+          "id": "SA021",
+          "code": "尝试（A），如果出错，就显示B。无论是否出错，最后显示C。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "try-except-finally",
+          "interpretations": [
+            "try full"
+          ]
+        },
+        {
+          "id": "SA022",
+          "code": "依x分情形：若为A，就显示a；若为B，就显示b。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "简单分情形",
+          "interpretations": [
+            "simple match"
+          ]
+        },
+        {
+          "id": "SA023",
+          "code": "设甲没有值。使甲变为5。显示甲。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "空值到值",
+          "interpretations": [
+            "none to val"
+          ]
+        }
+      ]
+    },
+    "TYPE_CONSTRAINTS": {
+      "title": "类型约束",
+      "description": "4 cases",
+      "cases": [
+        {
+          "id": "TC001",
+          "code": "设置数据类别，包括以下内容：值，须为整数，可以没有值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "约束组合",
+          "interpretations": [
+            "constraints combo"
+          ]
+        },
+        {
+          "id": "TC002",
+          "code": "设置数据类别，包括以下内容：值，不得为负。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "非负约束",
+          "interpretations": [
+            "non-negative"
+          ]
+        },
+        {
+          "id": "TC003",
+          "code": "设置数据类别，包括以下内容：值，默认为0。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "默认值",
+          "interpretations": [
+            "default"
+          ]
+        },
+        {
+          "id": "TC004",
+          "code": "设置数据类别，包括以下内容：值，须为整数，不得为负，默认为0，可以没有值。",
+          "expected": "valid",
+          "errorType": null,
+          "reason": "全部约束",
+          "interpretations": [
+            "all constraints"
+          ]
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_cases": 265,
+    "by_verdict": {
+      "valid": 219,
+      "syntax_error": 12,
+      "name_error": 23,
+      "ambiguity_error": 3,
+      "scope_error": 8,
+      "warning": 0
+    },
+    "by_category": {
+      "ASSERTION_ERROR": 7,
+      "CATEGORY": 6,
+      "CHAINED_EXPRESSION": 2,
+      "COMPLEX_SENTENCES": 12,
+      "CONTEXTUAL_KEYWORD": 18,
+      "CURLEY_BRACE": 11,
+      "DELETE_NAME": 4,
+      "FUNCTION_CALL": 8,
+      "IMPORT_NAMING": 6,
+      "INVALID_NAME_CHARS": 8,
+      "KEYWORD_IDENTIFIER_CONFLICT": 8,
+      "LEXICAL_AMBIGUITY": 18,
+      "MATCH_DUPLICATE": 5,
+      "MISCELLANEOUS": 18,
+      "MULTIPLE_ACTIONS": 5,
+      "NAME_DUPLICATE_SAME_SCOPE": 15,
+      "NAME_OMISSION": 3,
+      "NESTED_SCOPE_NAME": 5,
+      "NONE_DUAL_ROLE": 6,
+      "PRECEDENCE": 22,
+      "PUNCTUATION": 21,
+      "RECURSIVE_DEFINITION": 4,
+      "SCOPE_VIOLATION": 17,
+      "STATUS_PREDICATE": 9,
+      "SYNTACTIC_AMBIGUITY": 23,
+      "TYPE_CONSTRAINTS": 4
+    }
+  }
+}
