@@ -9,6 +9,7 @@ from .tokens import Token, KW_MAP, KW_SORTED
 from .tokens import NUMBER, STRING, IDENTIFIER, COMMENT
 from .tokens import LIST_OPEN, LIST_CLOSE, MODULE_OPEN, MODULE_CLOSE
 from .tokens import PAREN_OPEN, PAREN_CLOSE, COMMA, DUN_HAO, PERIOD, COLON, SEMICOLON, EOF
+from .tokens import OP_SUB
 
 
 # 单字标点映射
@@ -59,17 +60,40 @@ def 扫描(源码: str) -> list[Token]:
             列 += (i - start)
             continue
 
-        # 文本字面量 【…】
+        # 文本字面量 【…】支持 】】 转义为字面 】  \n 转义为换行
         if ch == "【":
             开始 = i
             i += 1
-            while i < 长度 and 源码[i] != "】":
-                if 源码[i] == "\n":
-                    行 += 1
-                i += 1
-            if i < 长度:
-                i += 1  # 跳过 】
-            文本 = 源码[开始 + 1:i - 1]  # 去掉【】
+            片段: list[str] = []
+            while i < 长度:
+                if 源码[i] == "】":
+                    if i + 1 < 长度 and 源码[i + 1] == "】":
+                        片段.append("】")
+                        i += 2
+                    else:
+                        i += 1  # 跳过结束 】
+                        break
+                elif 源码[i] == "\\" and i + 1 < 长度:
+                    if 源码[i + 1] == "n":
+                        片段.append("\n")
+                        i += 2
+                    elif 源码[i + 1] == "\\":
+                        片段.append("\\")
+                        i += 2
+                    else:
+                        片段.append(源码[i])
+                        i += 1
+                else:
+                    if 源码[i] == "\n":
+                        行 += 1
+                    片段.append(源码[i])
+                    i += 1
+            else:
+                i = 开始 + 1  # 未闭合，回到起始
+            文本 = "".join(片段)
+            tokens.append(Token(token_type=STRING, 值=文本, 位置=位置))
+            列 += (i - 开始)
+            continue
             tokens.append(Token(token_type=STRING, 值=文本, 位置=位置))
             列 += (i - 开始)
             continue
@@ -139,6 +163,13 @@ def 扫描(源码: str) -> list[Token]:
             if ch == "\n":
                 行 += 1
                 列 = 1
+            continue
+
+        # 负数：负 后跟数字 → 一元负号
+        if ch == "负" and i + 1 < 长度 and 源码[i + 1].isdigit():
+            tokens.append(Token(token_type=OP_SUB, 值=ch, 位置=位置))
+            i += 1
+            列 += 1
             continue
 
         # 标识符（逐字扫描，遇到关键字边界自动断开）
