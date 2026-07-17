@@ -123,6 +123,10 @@ def 运行(源码: str, 全局变量: dict | None = None,
     环境 = {"__name__": "__周道__"}
     if 全局变量:
         环境.update(全局变量)
+    # 注入 JSON 边界函数
+    from .json_boundary import 解析JSON, 生成JSON
+    环境["解析JSON"] = 解析JSON
+    环境["生成JSON"] = 生成JSON
     exec(python_code, 环境)
     return 环境
 

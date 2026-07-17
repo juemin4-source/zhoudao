@@ -17,6 +17,8 @@ from __future__ import annotations
     "压缩", "打印", "输入", "打开",
     "类型", "字符串", "整数", "小数",
     "布尔", "列表", "字典", "集合", "元组",
+    # JSON 数据边界
+    "解析JSON", "生成JSON",
     # Python 内置类型（可在周道代码中直接使用）
     "dict", "list", "int", "float", "str", "bool", "set", "tuple",
     "range", "len", "type",
