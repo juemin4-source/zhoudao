@@ -431,6 +431,10 @@ class 语义分析器:
             self._分析表达式(expr.右)
         elif isinstance(expr, 成员访问IR):
             self._分析表达式(expr.对象)
+            # 检查自己的已知字段
+            if isinstance(expr.对象, 变量引用IR) and expr.对象.名称 == "自己" and self.在类别方法内:
+                if self.当前类别名 and self.当前类别名 in self.类别方法表:
+                    pass  # 字段存在性检查需访问类别声明信息
         elif isinstance(expr, 字符串下标IR):
             self._分析表达式(expr.对象)
             # 键是字符串字面量，不是名称
