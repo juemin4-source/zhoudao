@@ -72,10 +72,11 @@ class 解析器:
     def __init__(self, 令牌列表: list[Token]):
         self.令牌 = 令牌列表
         self.当前位置 = 0
-        self._在定义内 = False  # 是否在函数定义中
-        self._在异常内 = False  # 是否在 except 子句中
-        self._循环深度 = 0     # 嵌套循环深度（用于检查 break/continue）
-        self._待定注释: list[str] = []  # 待附着的注释行
+        self._在定义内 = False
+        self._在异常内 = False
+        self._循环深度 = 0
+        self._待定注释: list[str] = []
+        self._焦点元素: str | None = None
 
     # ==================== 辅助方法 ====================
 
