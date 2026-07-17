@@ -1,0 +1,86 @@
+{
+  "schema_version": "0.1.0",
+  "language": "周道",
+  "description": "周道诊断代码速查表",
+
+  "codes": [
+    {
+      "code": "ZD-SYNTAX-001",
+      "severity": "error",
+      "message": "无法识别的字符",
+      "description": "源码中包含不属于周道字符集的字符"
+    },
+    {
+      "code": "ZD-SYNTAX-002",
+      "severity": "error",
+      "message": "缺少语句终止符",
+      "description": "语句未以 。结尾"
+    },
+    {
+      "code": "ZD-SYNTAX-003",
+      "severity": "error",
+      "message": "未闭合的定界符",
+      "description": "【】或（）或 "" 未成对闭合"
+    },
+    {
+      "code": "ZD-SYNTAX-004",
+      "severity": "error",
+      "message": "意外的缩进",
+      "description": "缩进级别与上下文不匹配"
+    },
+    {
+      "code": "ZD-LEX-001",
+      "severity": "error",
+      "message": "无法识别的 Token",
+      "description": "Lexer 遇到了不能映射到任何 Token 类型的输入"
+    },
+    {
+      "code": "ZD-NAME-001",
+      "severity": "error",
+      "message": "未定义的名称",
+      "description": "引用了在当前作用域中未定义的名称"
+    },
+    {
+      "code": "ZD-NAME-002",
+      "severity": "error",
+      "message": "重复定义",
+      "description": "名称在当前作用域中已被定义"
+    },
+    {
+      "code": "ZD-NAME-003",
+      "severity": "error",
+      "message": "作用域冲突",
+      "description": "名称同时被声明为 global 和 nonlocal"
+    },
+    {
+      "code": "ZD-SEM-001",
+      "severity": "error",
+      "message": "类型不匹配",
+      "description": "表达式类型与预期不兼容"
+    },
+    {
+      "code": "ZD-SEM-002",
+      "severity": "error",
+      "message": "非法上下文",
+      "description": "语句出现在不允许的上下文（如函数外的 所得）"
+    },
+    {
+      "code": "ZD-AMBIGUITY-001",
+      "severity": "error",
+      "message": "省略歧义",
+      "description": "省略表达式有多个可能的解析方式"
+    },
+    {
+      "code": "ZD-FILE-001",
+      "severity": "error",
+      "message": "文件未找到",
+      "description": "引入或运行的文件不存在"
+    },
+    {
+      "code": "ZD-IMPORT-001",
+      "severity": "error",
+      "message": "模块未找到",
+      "description": "Python 模块无法被导入"
+    }
+  ]
+}

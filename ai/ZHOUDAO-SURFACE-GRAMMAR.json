@@ -1,0 +1,120 @@
+{
+  "schema_version": "0.1.0",
+  "language": "周道",
+  "description": "周道表层语法索引 — 面向 AI 的结构化语法描述",
+
+  "statements": [
+    {
+      "name": "显示",
+      "pattern": "显示【内容】。",
+      "params": [
+        { "name": "内容", "type": "display_content", "desc": "显示内容，支持 {名称} 插值" }
+      ],
+      "python": "print(content)",
+      "example": "显示【你好，{名称}。】。"
+    },
+    {
+      "name": "设",
+      "pattern": "设 名称 = 表达式",
+      "params": [
+        { "name": "名称", "type": "identifier", "desc": "变量名" },
+        { "name": "表达式", "type": "expr", "desc": "初始值" }
+      ],
+      "python": "name = expr",
+      "example": "设 x = 42"
+    },
+    {
+      "name": "如果",
+      "pattern": "如果 条件:\n    语句\n[否则:\n    语句]",
+      "params": [
+        { "name": "条件", "type": "expr", "desc": "布尔条件" }
+      ],
+      "python": "if condition:\\n    body\\nelse:\\n    body",
+      "example": "如果 x > 0:\n    显示【正数】。\n否则:\n    显示【非正数】。"
+    },
+    {
+      "name": "当循环",
+      "pattern": "当 条件:\n    语句",
+      "params": [
+        { "name": "条件", "type": "expr", "desc": "循环继续条件" }
+      ],
+      "python": "while condition:\\n    body",
+      "example": "当 x > 0:\n    x = x - 1"
+    },
+    {
+      "name": "遍历",
+      "pattern": "遍历 元素 于 容器:\n    语句",
+      "params": [
+        { "name": "元素", "type": "identifier", "desc": "循环变量" },
+        { "name": "容器", "type": "expr", "desc": "可迭代对象" }
+      ],
+      "python": "for item in container:\\n    body",
+      "example": "遍历 i 于 [1, 2, 3]:\n    显示【{i}】。"
+    },
+    {
+      "name": "功能",
+      "pattern": "功能 名称(参数1, 参数2):\n    语句\n    [所得 表达式]",
+      "params": [
+        { "name": "名称", "type": "identifier", "desc": "函数名" },
+        { "name": "参数", "type": "param_list", "desc": "逗号分隔的参数" }
+      ],
+      "python": "def name(params):\\n    body\\n    return expr",
+      "example": "功能 加(a, b):\n    所得 a + b"
+    },
+    {
+      "name": "引入",
+      "pattern": "引入 模块名",
+      "params": [
+        { "name": "模块名", "type": "identifier", "desc": "Python 模块名" }
+      ],
+      "python": "import module",
+      "example": "引入 math"
+    },
+    {
+      "name": "引入周道源文件",
+      "pattern": "引入周道源文件《路径》。",
+      "params": [
+        { "name": "路径", "type": "string", "desc": ".zhoudao 文件路径" }
+      ],
+      "python": "# imports another .zhoudao file",
+      "example": "引入周道源文件《工具》。"
+    }
+  ],
+
+  "expressions": {
+    "literals": {
+      "integer": "42",
+      "float": "3.14",
+      "string": "\"文本\"",
+      "boolean": "真 / 假",
+      "null": "空",
+      "list": "[1, 2, 3]",
+      "map": "{\"键\": \"值\"}"
+    },
+    "operators": {
+      "arithmetic": ["+", "-", "*", "/", "//", "%"],
+      "comparison": ["==", "!=", "<", ">", "<=", ">="],
+      "logical": ["且", "或", "非"],
+      "membership": ["在", "不在"],
+      "identity": ["是", "不是"]
+    },
+    "special": {
+      "exact_name": "{名称}",
+      "member_access": "对象.属性",
+      "call": "函数(参数)"
+    }
+  },
+
+  "comments": {
+    "line": "# 行注释"
+  },
+
+  "punctuation": {
+    "display_delimiter": "【】",
+    "statement_end": "。",
+    "block_start": "：",
+    "string_quote": "\"\"",
+    "param_parens": "（）",
+    "interpolation_braces": "{}"
+  }
+}
