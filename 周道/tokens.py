@@ -109,6 +109,7 @@ DUN_HAO = "DUN_HAO"
 PERIOD = "PERIOD"
 COLON = "COLON"           # ：
 SEMICOLON = "SEMICOLON"   # ；
+COMMENT = "COMMENT"       # 注：……
 EOF = "EOF"
 
 

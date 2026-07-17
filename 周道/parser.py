@@ -11,7 +11,7 @@ from .tokens import (
     LIST_OPEN, LIST_CLOSE,
     MODULE_OPEN, MODULE_CLOSE,
     PAREN_OPEN, PAREN_CLOSE,
-    COMMA, DUN_HAO, PERIOD, COLON, SEMICOLON, EOF,
+    COMMA, DUN_HAO, PERIOD, COLON, SEMICOLON, EOF, COMMENT,
     K_SET, K_MAKE, K_AS, K_BECOME,
     K_TRUE_STATE, K_FALSE_STATE, K_NONE,
     K_IF, K_THEN, K_ELSE,
@@ -105,6 +105,7 @@ class 解析器:
 
     def 解析(self) -> 程序:
         程序节点 = 程序()
+        self.令牌 = [t for t in self.令牌 if t.token_type != COMMENT]
         while self._当前().token_type != EOF:
             句子节点 = self._解析一句()
             if 句子节点.语句列表:

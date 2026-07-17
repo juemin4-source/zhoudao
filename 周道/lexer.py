@@ -6,7 +6,7 @@
 
 from .errors import 源码位置, 词法错误
 from .tokens import Token, KW_MAP, KW_SORTED
-from .tokens import NUMBER, STRING, IDENTIFIER
+from .tokens import NUMBER, STRING, IDENTIFIER, COMMENT
 from .tokens import LIST_OPEN, LIST_CLOSE, MODULE_OPEN, MODULE_CLOSE
 from .tokens import PAREN_OPEN, PAREN_CLOSE, COMMA, DUN_HAO, PERIOD, COLON, SEMICOLON, EOF
 
@@ -109,6 +109,21 @@ def 扫描(源码: str) -> list[Token]:
             i += len(matched_keyword)
             列 += len(matched_keyword)
             continue
+
+        # 注释：注：从当前位置到行末（仅在有效边界处触发）
+        if ch == "注" and 源码[i:i+2] == "注：":
+            # 跳过前置空白后检查是否为注释边界
+            pos = i
+            while pos > 0 and 源码[pos-1] in " 	":
+                pos -= 1
+            if pos == 0 or 源码[pos-1] in "\n。；：":
+                start = i
+                while i < 长度 and 源码[i] != "\n":
+                    i += 1
+                文本 = 源码[start:i]
+                tokens.append(Token(token_type=COMMENT, 值=文本, 位置=位置))
+                列 += len(文本)
+                continue
 
         # 单字标点
         if ch in _标点:
