@@ -74,6 +74,7 @@ class 语义分析器:
         self.诊断列表: list[语义诊断] = []
         self.作用域列表: list[作用域快照] = []
         self.类别方法表: dict = {}
+        self.类别字段表: dict[str, set[str]] = {}
         self.入口是异步: bool = False
 
     # ── 入口 ────────────────────────────────────────────────
@@ -202,7 +203,10 @@ class 语义分析器:
             self._分析表达式(stmt.表达式)
         elif isinstance(stmt, 类别声明IR):
             self._注册绑定(stmt.名称, "类别", stmt)
-            # 类别字段不进入普通名称解析
+            # 存储类别字段信息供字段存在检查使用
+            if not hasattr(self, '类别字段表'):
+                self.类别字段表 = {}
+            self.类别字段表[stmt.名称] = {f.名称 for f in stmt.字段列表}
         elif isinstance(stmt, 删除IR):
             self._分析表达式(stmt.目标)
         elif isinstance(stmt, 空操作IR):
@@ -433,8 +437,13 @@ class 语义分析器:
             self._分析表达式(expr.对象)
             # 检查自己的已知字段
             if isinstance(expr.对象, 变量引用IR) and expr.对象.名称 == "自己" and self.在类别方法内:
-                if self.当前类别名 and self.当前类别名 in self.类别方法表:
-                    pass  # 字段存在性检查需访问类别声明信息
+                if self.当前类别名 and self.当前类别名 in getattr(self, '类别字段表', {}):
+                    if expr.成员 not in self.类别字段表[self.当前类别名]:
+                        self.诊断列表.append(语义诊断(
+                            f"类别「{self.当前类别名}」没有字段「{expr.成员}」",
+                            位置=self._取位置(expr),
+                            代码="ZS9006_UNKNOWN_SELF_FIELD",
+                        ))
         elif isinstance(expr, 字符串下标IR):
             self._分析表达式(expr.对象)
             # 键是字符串字面量，不是名称
