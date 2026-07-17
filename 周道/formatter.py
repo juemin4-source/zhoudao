@@ -1,6 +1,11 @@
-"""周道 v0.0.10: 规范格式化器。
+"""周道 v0.0.10.5: 规范格式化器 — 三模式。
 
 遍历 Surface AST 输出规范周道源码。
+支持三种运算符风格：
+  preserve（默认）：保留用户原始写法
+  verbal：统一输出汉语式（加、减、等于……）
+  symbolic：统一输出符号式（+、-、=……）
+
 幂等：格式化结果再次格式化不变。
 """
 
@@ -10,12 +15,29 @@ from .parser import 解析器
 from . import ast_nodes as AST
 
 
-def 格式化(源码: str, 行宽: int = 100) -> str:
+# 风格映射表（只含算符，不含空格——间距由 Formatter 统一负责）
+_汉语算符 = {
+    "+": "加", "-": "减", "*": "乘", "/": "除",
+    "==": "等于", "!=": "不等于",
+    ">": "大于", "<": "小于", ">=": "不少于", "<=": "不多于",
+    "**": "**", "//": "//", "%": "%",  # 无双表层，verbal 仍输出符号
+}
+
+_符号算符 = {
+    "+": "+", "-": "-", "*": "*", "/": "/",
+    "==": "=", "!=": "!=",
+    ">": ">", "<": "<", ">=": ">=", "<=": "<=",
+    "**": "**", "//": "//", "%": "%",
+}
+
+
+def 格式化(源码: str, 行宽: int = 100, *, 风格: str = "preserve") -> str:
     """格式化周道源码。
 
     Args:
         源码: 原始周道源码
         行宽: 最大行宽（保留接口）
+        风格: "preserve"（保留原写法）、"verbal"（汉语式）、"symbolic"（符号式）
 
     Returns:
         格式化后的源码
@@ -23,13 +45,21 @@ def 格式化(源码: str, 行宽: int = 100) -> str:
     tokens = 扫描(源码)
     parser = 解析器(tokens)
     program = parser.解析()
-    fmt = 周道格式化器()
+    fmt = 周道格式化器(风格=风格)
     return fmt.格式化程序(program)
 
 
-def 检查格式差异(源码: str, 行宽: int = 100) -> str | None:
+def _判断风格(节点) -> str:
+    """根据表层算符判断原始风格。汉语为 verbal，符号为 symbolic。"""
+    表层 = getattr(节点, '表层算符', None) or getattr(节点, '表层文本', None) or ""
+    if 表层 and ord(表层[0]) >= 0x4e00:
+        return "verbal"
+    return "symbolic"
+
+
+def 检查格式差异(源码: str, 行宽: int = 100, *, 风格: str = "preserve") -> str | None:
     """检查格式差异。"""
-    格式化后 = 格式化(源码, 行宽)
+    格式化后 = 格式化(源码, 行宽, 风格=风格)
     if 格式化后 == 源码:
         return None
     return 格式化后
@@ -50,10 +80,53 @@ def 迁移弃用句式(源码: str) -> str:
 class 周道格式化器:
     """Surface AST → 规范周道源码。"""
 
-    def __init__(self):
+    def __init__(self, 风格: str = "preserve"):
         self.输出: list[str] = []
         self.缩进层级: int = 0
         self.行首: bool = True
+        self.风格 = 风格  # "preserve" | "verbal" | "symbolic"
+
+    def _实际风格(self, 节点) -> str:
+        """确定当前节点的输出风格。"""
+        if self.风格 == "preserve":
+            return _判断风格(节点)
+        return self.风格
+
+    def _选算符(self, 语义算符: str, 表层算符: str = "") -> str:
+        """根据风格和表层信息选择输出算符。"""
+        if self.风格 == "preserve" and 表层算符:
+            return 表层算符
+        if self.风格 in ("verbal", "preserve"):
+            return _汉语算符.get(语义算符, 语义算符)
+        return _符号算符.get(语义算符, 语义算符)
+
+    def _渲染二元(self, 节点):
+        """渲染二元运算，根据风格决定间距。"""
+        算符文 = self._选算符(节点.算符, getattr(节点, '表层算符', ''))
+        if 算符文 and ord(算符文[0]) >= 0x4e00:
+            # 汉语式：不加空格
+            self._化表达式(节点.左)
+            self._写(算符文)
+            self._化表达式(节点.右)
+        else:
+            # 符号式：两侧各一个半角空格
+            self._化表达式(节点.左)
+            self._写(f" {算符文} ")
+            self._化表达式(节点.右)
+
+    def _渲染一元(self, 节点):
+        """渲染一元运算，根据风格决定负号写法。"""
+        实际风格 = self._实际风格(节点)
+        if 节点.算符 == "-":
+            if 实际风格 == "verbal":
+                self._写("负")
+            else:
+                self._写("-")  # 一元负号无空格
+            self._化表达式(节点.操作数)
+        elif 节点.算符 == "not":
+            self._写("并非（")
+            self._化表达式(节点.操作数)
+            self._写("）")
 
     @property
     def 缩进(self) -> str:
@@ -102,7 +175,7 @@ class 周道格式化器:
             self._写("使"); self._化表达式(节点.目标); self._写("变为"); self._化表达式(节点.值)
         elif isinstance(节点, AST.算术变更):
             self._写("使"); self._化表达式(节点.目标)
-            映射 = {"+=": "加", "-=": "减", "*=": "乘", "/=": "除", "//=": "整除", "%=": "余"}
+            映射 = {"+=": "加", "-=": "减", "*=": "乘", "/=": "除"}
             self._写(映射.get(节点.算符, 节点.算符)); self._化表达式(节点.值)
         elif isinstance(节点, AST.命题变更):
             self._写("使"); self._化表达式(节点.目标); self._写('成立' if 节点.值 else '不成立')
@@ -249,15 +322,9 @@ class 周道格式化器:
         elif isinstance(节点, AST.空值): self._写("没有值")
         elif isinstance(节点, AST.变量): self._写(节点.名称)
         elif isinstance(节点, AST.二元运算):
-            self._化表达式(节点.左)
-            映射 = {"+":"加","-":"减","*":"乘","/":"除","//":"整除","%":"余",
-                    "==":"等于","!=":"不等于",">":"大于","<":"小于",">=":"不少于","<=":"不多于",
-                    "and":"且","or":"或","in":"在","not_in":"不在","is":"就是"}
-            self._写(映射.get(节点.算符, 节点.算符))
-            self._化表达式(节点.右)
+            self._渲染二元(节点)
         elif isinstance(节点, AST.一元运算):
-            if 节点.算符 == "not": self._写("并非（"); self._化表达式(节点.操作数); self._写("）")
-            else: self._写(节点.算符); self._化表达式(节点.操作数)
+            self._渲染一元(节点)
         elif isinstance(节点, AST.调用):
             self._化表达式(节点.函数); self._写("（")
             for i, a in enumerate(节点.参数):
