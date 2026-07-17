@@ -1,129 +1,184 @@
-# Python ↔ 周道全对应表
+# Python ↔ 周道对应表 v1.0
 
-> 每项列出 Python 写法、周道写法、母语内语、审计状态。
-> 审计状态：✅ 已通过 / ⚠️ 需审议 / ❌ 有缺口
+> 版本：0.0.10
+> 等价级别：EXACT / INTENT_EQUIVALENT / SUBSET / ZHOUDAO_NATIVE / UNSUPPORTED
 
 ---
 
 ## 一、词法
 
-| Python | 周道 | 母语内语 | 审计 |
-|--------|------|---------|------|
-| `# comment` | `注：说明` | 注：说明 | ✅ |
-| `42` | `42` | 四十二 | ✅ |
-| `3.14` | `3.14` | 三点一四 | ✅ |
-| `"text"` | `【文本】` | 文本 | ✅ |
-| `"a】b"` | `【a】】b】` | 右括号转义 | ✅ |
-| `"a\nb"` | `【a\nb】` | 换行转义 | ✅ |
-| `[1, 2, 3]` | `［1、2、3］` | 列表 1 2 3 | ✅ |
-| `(1, 2)` | `固定序列［1、2］` | 固定序列 1 2 | ✅ |
-| `{1, 2}` | `集合［1、2］` | 集合 1 2 | ✅ |
-| `{"a": 1}` | `［【a】为1］` | 映射 a 为 1 | ✅ |
-| `True` | `成立` | 成立 | ✅ |
-| `False` | `不成立` | 不成立 | ✅ |
-| `None` | `没有值` | 没有值 | ✅ |
-| `-3` | `负3` | 负三 | ✅ |
-
----
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `# note` | 行末注释 | 注：说明 | `注：说明` | ZHOUDAO_NATIVE | lexer COMMENT | ⚠️ |
+| `42` | 整数 | 四十二 | `42` | EXACT | lexer NUMBER | ✅ |
+| `3.14` | 小数 | 三点一四 | `3.14` | EXACT | lexer NUMBER | ✅ |
+| `"text"` | 字符串 | 文本 | `【文本】` | INTENT_EQUIVALENT | lexer STRING | ✅ |
+| `"a】b"` | 含右括号文本 | 需要转义 | `【a】】b】` | ZHOUDAO_NATIVE | 待审议转义方案 | ⚠️ |
+| `[1, 2, 3]` | 列表 | 列表 1 2 3 | `［1、2、3］` | EXACT | tests | ✅ |
+| `(1, 2)` | 元组 | 固定序列 1 2 | `固定序列［1、2］` | INTENT_EQUIVALENT | tests | ✅ |
+| `{1, 2}` | 集合 | 集合 1 2 | `集合［1、2］` | EXACT | tests | ✅ |
+| `{"a": 1}` | 映射 | 映射 a 为 1 | `映射［【a】为1］` | EXACT | tests | ✅ |
+| `True` | 真值 | 真 | `真` | EXACT | 冻结基线 | ✅ |
+| `False` | 假值 | 假 | `假` | EXACT | 冻结基线 | ✅ |
+| `None` | 空值 | 没有值 | `没有值` | EXACT | tests | ✅ |
+| `-3` | 负整数 | 负三 | `负3` | ZHOUDAO_NATIVE | lexer OP_SUB | ⚠️ |
 
 ## 二、运算符
 
-| Python | 周道 | 母语内语 | 审计 |
-|--------|------|---------|------|
-| `a + b` | `a加b` | a 加 b | ✅ |
-| `a - b` | `a减b` | a 减 b | ✅ |
-| `a * b` | `a乘b` | a 乘 b | ✅ |
-| `a / b` | `a除b` | a 除 b | ✅ |
-| `a // b` | `a整除b` | a 整除 b | ✅ |
-| `a % b` | `a余b` | a 余 b | ✅ |
-| `-x` | `负x` | 负 x | ✅ |
-| `a == b` | `a等于b` | a 等于 b | ✅ |
-| `a != b` | `a不等于b` | a 不等于 b | ✅ |
-| `a > b` | `a大于b` | a 大于 b | ✅ |
-| `a < b` | `a小于b` | a 小于 b | ✅ |
-| `a >= b` | `a不少于b` | a 不少于 b | ⚠️ 审议中 |
-| `a <= b` | `a不多于b` | a 不多于 b | ⚠️ 审议中 |
-| `x in ys` | `x在ys` | x 在 ys 中 | ✅ |
-| `x not in ys` | `x不在ys` | x 不在 ys | ✅ |
-| `a is b` | `a就是b` | a 就是 b | ✅ |
-| `a is not b` | `a不是b本身` | a 不是 b 本身 | ✅ |
-| `a and b` | `a且b` | a 且 b（布尔） | ✅ |
-| `a or b` | `a或b` | a 或 b（布尔） | ✅ |
-| `not a` | `并非（a）` | 并非 a | ✅ |
-| `a.b` | `a的b` | a 的 b | ✅ |
-| `a[i]` | `a［i］` | a 下标 i | ✅ |
-| `a[i:j]` | `a［i：j］` | a 切片 i 到 j | ✅ |
-
----
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `a + b` | 加法 | a 加 b | `a加b` | EXACT | parser | ✅ |
+| `a - b` | 减法 | a 减 b | `a减b` | EXACT | parser | ✅ |
+| `a * b` | 乘法 | a 乘 b | `a乘b` | EXACT | parser | ✅ |
+| `a / b` | 除法 | a 除 b | `a除b` | EXACT | parser | ✅ |
+| `a // b` | 整数除法 | a 整除 b | `a整除b` | EXACT | parser | ✅ |
+| `a % b` | 取余 | a 余 b | `a余b` | EXACT | parser | ✅ |
+| `a ** b` | 幂 | a 的 b 次方 | — | UNSUPPORTED | — | 🔮 |
+| `-x` | 取负 | 负 x | `负x` | ZHOUDAO_NATIVE | lexer | ⚠️ |
+| `a == b` | 等于 | a 等于 b | `a等于b` | EXACT | tests | ✅ |
+| `a != b` | 不等于 | a 不等于 b | `a不等于b` | EXACT | tests | ✅ |
+| `a > b` | 大于 | a 大于 b | `a大于b` | EXACT | tests | ✅ |
+| `a < b` | 小于 | a 小于 b | `a小于b` | EXACT | tests | ✅ |
+| `a >= b` | 大于等于 | a 大于等于 b | `a大于等于b` | EXACT | tokens 010.5 | ✅ |
+| `a <= b` | 小于等于 | a 小于等于 b | `a小于等于b` | EXACT | tokens 010.5 | ✅ |
+| 链式比较 `a < b < c` | 连续比较 | — | — | UNSUPPORTED | — | 🔮 |
+| `x in ys` | 成员关系 | x 在 ys 中 | `x在ys中` | EXACT | tests | ✅ |
+| `x not in ys` | 非成员 | x 不在 ys | `x不在ys中` | EXACT | tests | ✅ |
+| `a is b` | 身份 | a 就是 b | `a就是b` | EXACT | tests | ✅ |
+| `a is not b` | 身份否定 | a 不是 b | `a不是b本身` | EXACT | tests | ✅ |
+| `a and b` | 逻辑与 | a 且 b | `a且b` | INTENT_EQUIVALENT | tests | ⚠️ |
+| `a or b` | 逻辑或 | a 或 b | `a或b` | INTENT_EQUIVALENT | tests | ⚠️ |
+| `not a` | 逻辑非 | 并非 a | `并非（a）` | INTENT_EQUIVALENT | tests | ✅ |
+| `a.b` | 成员访问 | a 的 b | `a的b` | EXACT | tests | ✅ |
+| `a[i]` | 下标 | a 下标 i | `a［i］` | EXACT | tests | ✅ |
+| `a[i:j]` | 切片 | a 切片 | `a［i：j］` | EXACT | tests | ✅ |
 
 ## 三、语句
 
-| Python | 周道 | 母语内语 | 审计 |
-|--------|------|---------|------|
-| `x = 1` | `设x为1。` | 设 x 为 1 | ✅ |
-| `x = None` | `设x没有值。` | 设 x 没有值 | ✅ |
-| `x = True` | `设x成立。` | 设 x 成立 | ✅ |
-| `x += 1` | `使x加1。` | 使 x 加 1 | ✅ |
-| `x -= 1` | `使x减1。` | 使 x 减 1 | ✅ |
-| `x *= 2` | `使x乘2。` | 使 x 乘 2 | ✅ |
-| `del x` | `删去x。` | 删去 x | ✅ |
-| `print(x)` | `显示x。` | 显示 x | ✅ |
-| `if cond:` | `如果cond，就` | 如果 cond，就 | ✅ |
-| `elif cond:` | `不然如果cond，就` | 不然如果 cond，就 | ✅ |
-| `else:` | `不然就` | 不然就 | ✅ |
-| `while cond:` | `当cond时，一直` | 当 cond 时，一直 | ✅ |
-| `for x in it:` | `从it中，每取一项记作x，就` | 从 it 中每取一项记作 x 就 | ✅ |
-| `async for x in it:` | `从it中，每等到一项记作x，就` | 从 it 中每等到一项记作 x 就 | ✅ |
-| `break` | `跳出循环` | 跳出循环 | ✅ |
-| `continue` | `继续下一轮` | 继续下一轮 | ✅ |
-| `try:` | `尝试` | 尝试 | ✅ |
-| `except:` | `如果出错，就` | 如果出错，就 | ✅ |
-| `except ValueError:` | `如果错误类型是值出错，就` | 如果错误类型是值出错，就 | ✅ |
-| `raise`（原样） | `原样报出当前错误` | 原样报出当前错误 | ✅ |
-| `finally:` | `无论是否出错，最后` | 无论是否出错最后 | ✅ |
-| `return x` | `以x为所得` | 以 x 为所得 | ✅ |
-| `pass` | `不作处理` | 不作处理 | ✅ |
-| `global x` | `下文所用x，均指全局的` | 下文所用 x 均指全局的 | ✅ |
-| `nonlocal x` | `下文所用x，指本定义外层的` | 下文所用 x 指本定义外层的 | ✅ |
-| `assert cond` | `x须cond` / `x不得cond` | x 须/不得 cond | ✅ |
-| `def f():` | `定义f（）如下：` | 定义 f 如下 | ✅ |
-| `def f(x, y):` | `定义f（x、y）如下：` | 定义 f 参数 x y 如下 | ✅ |
-| `def f(x=1):` | `定义f（x默认为1）如下：` | 定义 f x 默认为 1 如下 | ✅ |
-| `f(x=1)` | `f（x为1）` | f x 为 1 | ✅ |
-| `match x:` | `依x分情形：` | 依 x 分情形 | ✅ |
-| `case 1:` | `若为1，就` | 若为 1 就 | ✅ |
-| `case _:` | `其余，就` | 其余就 | ✅ |
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `x = 1` | 绑定 | 设 x 为 1 | `设x为1。` | EXACT | tests | ✅ |
+| `x = None` | 空绑定 | 设 x 为没有值 | `设x为没有值。` | EXACT | tests | ✅ |
+| `x = True` | 真绑定 | 设 x 为真 | `设x为真。` | EXACT | 冻结基线 001 | ✅ |
+| `x = False` | 假绑定 | 设 x 为假 | `设x为假。` | EXACT | 冻结基线 001 | ✅ |
+| `x += 1` | 自增 | 使 x 加 1 | `使x加1。` | EXACT | tests | ✅ |
+| `x -= 1` | 自减 | 使 x 减 1 | `使x减1。` | EXACT | tests | ✅ |
+| `x *= 2` | 自乘 | 使 x 乘 2 | `使x乘2。` | EXACT | tests | ✅ |
+| `a[i] = v` | 项目变更 | 使 a 下标 i 变为 v | `使a［i］变为v。` | EXACT | tests | ✅ |
+| `del x` | 删除 | 删去 x | `删去x。` | EXACT | tests | ✅ |
+| `del a[i]` | 删除项目 | 删去 a 下标 i | `删去a［i］。` | EXACT | tests | ✅ |
+| `print(x)` | 输出 | 显示 x | `显示x。` | INTENT_EQUIVALENT | tests | ✅ |
+| `if cond:` | 条件 | 如果 cond 就 | `如果cond，就` | EXACT | tests | ✅ |
+| `elif cond:` | 否则如果 | 不然如果 cond 就 | `不然，如果cond，就` | EXACT | tests | ✅ |
+| `else:` | 否则 | 不然就 | `不然就` | EXACT | tests | ✅ |
+| `while cond:` | 当型循环 | 当 cond 时一直 | `当cond时，一直` | EXACT | tests | ✅ |
+| `for x in it:` | 遍历 | 从 it 每取一项记作 x 就 | `从it中，每取一项记作x，就` | EXACT | tests | ✅ |
+| `async for x in it:` | 异步遍历 | 每等到一项记作 x 就 | `从it中，每等到一项记作x，就` | EXACT | tests | ✅ |
+| `break` | 跳出循环 | 跳出循环 | `跳出循环` | EXACT | tests | ✅ |
+| `continue` | 继续 | 继续下一轮 | `继续下一轮` | EXACT | tests | ✅ |
+| `try:` | 尝试 | 尝试 | `尝试` | EXACT | tests | ✅ |
+| `except:` | 捕获全部 | 如果出错就 | `如果出错，就` | EXACT | tests | ✅ |
+| `except ValueError:` | 分类捕获 | 如果错误类型是值出错就 | `如果错误类型是值出错，就` | EXACT | tests | ✅ |
+| `raise`（原样） | 重抛 | 原样报出当前错误 | `原样报出当前错误` | EXACT | tests | ✅ |
+| `finally:` | 最终 | 无论是否出错最后 | `无论是否出错，最后` | EXACT | tests | ✅ |
+| `return x` | 返回值 | 以 x 为所得 | `以x为所得` | EXACT | tests | ✅ |
+| `return` | 返回空 | 以没有值为所得 | `以没有值为所得` | INTENT_EQUIVALENT | 规范 | ✅ |
+| `pass` | 空操作 | 不作处理 | `不作处理` | EXACT | tests | ✅ |
+| `global x` | 全局声明 | 下文所用 x 均指全局的 x | `下文所用x，均指全局的x。` | EXACT | tests | ✅ |
+| `nonlocal x` | 外层声明 | 下文所用 x 指外层的 x | `下文所用x，指本定义外层的x。` | EXACT | tests | ✅ |
+| `assert x > 0` | 断言 | x 须大于 0 | `x须大于0。` | SUBSET | tests | ✅ |
 
----
+## 四、函数
 
-## 四、类别与对象
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `def f():` | 定义函数 | 定义 f | `定义f（）如下：` | EXACT | tests | ✅ |
+| `def f(a, b):` | 多参 | 定义 f 参数 a b | `定义f（a、b）如下：` | EXACT | tests | ✅ |
+| `def f(a=1):` | 默认参数 | a 默认为 1 | `定义f（a默认为1）如下：` | EXACT | tests | ✅ |
+| `f(a=1)` | 命名参数 | a 为 1 | `f（a为1）` | EXACT | tests | ✅ |
+| 函数自然结束 | 隐式返回 None | 自然结束 | 无所得 | INTENT_EQUIVALENT | 规范 | ✅ |
+| `*args` | 可变参数 | — | — | UNSUPPORTED | — | 🔮 |
+| `**kwargs` | 关键字参数 | — | — | UNSUPPORTED | — | 🔮 |
+| `lambda` | 匿名函数 | — | — | UNSUPPORTED | — | 🔮 |
+| 闭包 | 词法作用域 | — | 词法作用域 | EXACT | tests | ✅ |
 
-| Python | 周道 | 母语内语 | 审计 |
-|--------|------|---------|------|
-| `class C:` | `设置C类别，包括` | 设置 C 类别包括 | ✅ |
-| `self.x = v` | 字段默认值 | 包括 x | ✅ |
-| `def m(self):` | `定义C类别的m（）如下：` | 定义 C 类别的 m 如下 | ✅ |
-| `import os` | `引入Python模块《os》` | 引入 Python 模块 os | ✅ |
-| `from os import path` | `从Python模块《os》中引入path` | 从 Python 模块 os 中引入 path | ✅ |
-| `import`（周道模块） | `引入周道源文件《工具》` | 引入周道源文件工具 | ✅ |
-| `__all__` | `规定模块接口：整理、统计` | 规定模块接口整理统计 | ✅ |
+## 五、类别
 
----
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `class C:` | 声明类别 | 设置 C 类别 | `设置C类别，包括` | INTENT_EQUIVALENT | tests | ✅ |
+| `C(...)` | 构造实例 | C | `C（）` | EXACT | tests | ✅ |
+| `self` | 当前实例 | 自己 | `自己` | ZHOUDAO_NATIVE | tests | ✅ |
+| `self.x` | 实例字段 | 自己的 x | `自己的x` | ZHOUDAO_NATIVE | tests | ✅ |
+| `{自己}` | — | 名为"自己"的精确名称 | `{自己}` | ZHOUDAO_NATIVE | tests | ✅ |
+| `def m(self):` | 实例方法 | 定义 C 类别的 m | `定义C类别的m（）如下：` | ZHOUDAO_NATIVE | tests | ✅ |
+| `self.x = v` | 修改字段 | 使自己的 x 变为 v | `使自己的x变为v。` | EXACT | tests | ✅ |
+| 字段默认值 | 声明字段初值 | x 默认为 v | `x，默认为v` | EXACT | tests | ✅ |
+| `__init__` | 构造方法 | 字段声明 | 字段列表 | SUBSET | tests | ✅ |
+| `class A(B):` | 继承 | — | — | UNSUPPORTED | — | 🔮 |
+| `@property` | 属性 | — | — | UNSUPPORTED | — | 🔮 |
+| `@classmethod` | 类方法 | — | — | UNSUPPORTED | — | 🔮 |
 
-## 五、错误与异常
+## 六、模块
 
-| Python | 周道 | 母语内语 | 审计 |
-|--------|------|---------|------|
-| `raise RuntimeError("msg")` | `报错【msg】` | 报错 msg | ✅ |
-| `raise ValueError("msg")` | `报错【msg】，错误类型是值出错` | 报错 msg 错误类型是值出错 | ✅ |
-| `raise`（原样） | `原样报出当前错误` | 原样报出当前错误 | ✅ |
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `import os` | 导入 Python 模块 | 引入 Python 模块 os | `引入Python模块《os》。` | EXACT | tests | ✅ |
+| `from os import path` | 选择引入 | 从 Python 模块 os 引入 path | `从Python模块《os》中引入path。` | EXACT | tests | ✅ |
+| `import os as sys` | 别名 | 下文简称 | `引入Python模块《os》，下文简称sys。` | EXACT | tests | ✅ |
+| `from . import tool` | 相对引入 | — | — | UNSUPPORTED | — | 🔮 |
+| 周道源文件 | — | 引入周道源文件工具 | `引入周道源文件《工具》。` | ZHOUDAO_NATIVE | tests | ✅ |
+| 模块接口 | — | 规定模块接口 | `规定模块接口：整理、统计。` | ZHOUDAO_NATIVE | tests | ✅ |
+| `__all__` | 公开接口 | — | `规定模块接口：` | INTENT_EQUIVALENT | tests | ✅ |
 
----
+## 七、错误
 
-## 六、程序结构
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `raise RuntimeError("m")` | 抛异常 | 报错 m | `报错【m】。` | EXACT | tests | ✅ |
+| `raise ValueError("m")` | 指定类型 | 报错 m 类型值出错 | `报错【m】，错误类型是值出错。` | EXACT | tests | ✅ |
+| `raise`（空） | 原样重抛 | 原样报出当前错误 | `原样报出当前错误。` | EXACT | tests | ✅ |
+| `__doc__` | 文档字符串 | | 定义前连续 `注：` | SUBSET | 规范 | ⚠️ |
+| 异常类型名 | 错误标识 | 6 种预定义 | `值出错` `键出错` 等 | ZHOUDAO_NATIVE | tests | ✅ |
 
-| Python | 周道 | 母语内语 | 审计 |
-|--------|------|---------|------|
-| `if __name__ == '__main__':` | `运行如下：` | 运行如下 | ✅ |
-| function docstring | 定义前连续 `注：` | 定义前说明 | ✅ |
-| `from . import` | `从周道源文件《工具》中引入` | 从周道源文件引入 | ✅ |
+## 八、程序结构
+
+| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
+|--------|---------|---------|------|------|---------|------|
+| `if __name__ == '__main__':` | 入口 | 运行如下 | `运行如下：` | INTENT_EQUIVALENT | tests | ✅ |
+| `yield x` | 生成值 | 依次给出 x | `依次给出x。` | EXACT | tests | ✅ |
+| `await f()` | 等待完成 | 等待 f 完成 | `等待f（）完成。` | EXACT | tests | ✅ |
+| `result = await f()` | 等待并取得结果 | 等待 f 完成记作结果 | `等待f（）完成，记作结果。` | EXACT | tests | ✅ |
+| `match x:` | 模式匹配 | 依 x 分情形 | `依x分情形：` | EXACT | tests | ✅ |
+| `case 1:` | 分支 | 若为 1 就 | `若为1，就` | EXACT | tests | ✅ |
+| `case _:` | 默认 | 其余就 | `其余，就` | EXACT | tests | ✅ |
+
+## 九、周道原生概念
+
+| 概念 | 周道 | 说明 | 级别 | 实现证据 | 状态 |
+|------|------|------|------|---------|------|
+| 精确名称 | `{名称}` | 永不拆分、不参与上下文判断 | ZHOUDAO_NATIVE | 宪法第1条 | ✅ |
+| 上下文自己 | `自己` | 类别方法中绑定到实例 | ZHOUDAO_NATIVE | tests | ✅ |
+| 精确自己 | `{自己}` | 普通名称，不绑定到实例 | ZHOUDAO_NATIVE | tests | ✅ |
+| 错误上下文字 | `错误` `错误内容` | 异常分支中的当前异常 | ZHOUDAO_NATIVE | tests | ✅ |
+| 前置引导词 | `固定序列［` `集合［` `映射［` | 字面量类型前缀 | ZHOUDAO_NATIVE | tests | ✅ |
+
+## 十、明确不支持
+
+| Python 能力 | 理由 | 预期版本 |
+|------------|------|---------|
+| 链式比较 `a < b < c` | 语法复杂性 | 013+ |
+| 继承 | 语义复杂性 | 012+ |
+| 装饰器 `@decorator` | 语法未冻结 | 013+ |
+| 上下文管理器 `with` | 非基础 | 012+ |
+| 推导式 | 非基础 | 013+ |
+| `*args` / `**kwargs` | 非基础 | 012+ |
+| 参数解包 `*iter` | 非基础 | 012+ |
+| 匿名函数 `lambda` | 非基础 | 013+ |
+| 运算符重载 | 需完整类模型 | 014+ |
+| `yield from` | 非基础 | 012+ |
+| 异常组 `except*` | 复杂 | 014+ |
+| 类型注解 | 需先确使用需求 | 013+ |
+| 相对包引入 | 需包系统设计 | 012+ |
+| `__init__` 自定义 | 已有字段模型替代 | 012+ |
+| 描述器 `@property` | 需完整属性模型 | 013+ |
