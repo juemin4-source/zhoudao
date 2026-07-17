@@ -75,6 +75,7 @@ class 降低器:
     def __init__(self, ast: 程序):
         self.ast = ast
         self.位置映射: dict[int, 源码位置] = {}
+        self._焦点元素: str | None = None
 
     def _记录位置(self, ir_node, ast_node) -> None:
         """从 AST 节点记录源码位置到 IR 节点。
@@ -165,11 +166,14 @@ class 降低器:
             self._记录位置(ir, 节点)
             return ir
         elif isinstance(节点, 遍历):
+            旧焦点 = self._焦点元素
+            self._焦点元素 = 节点.元素
             ir = 遍历IR(
                 元素=节点.元素,
                 集合=self._降低表达式(节点.集合),
                 体=self._降低语句列表(节点.体),
             )
+            self._焦点元素 = 旧焦点
             self._记录位置(ir, 节点)
             return ir
         elif isinstance(节点, 尝试):
@@ -490,8 +494,9 @@ class 降低器:
             self._记录位置(ir, 节点)
             return ir
         elif isinstance(节点, 上下文成员访问):
-            # 临时降低：其姓名 → 其.姓名（语义分析后将解析为实际焦点变量）
-            obj = 变量引用IR(名称="其")
+            # 其姓名 → 焦点元素.姓名（聚焦点由遍历结构确定）
+            焦点名 = self._焦点元素 or "其"
+            obj = 变量引用IR(名称=焦点名)
             ir = 成员访问IR(对象=obj, 成员=节点.首成员)
             self._记录位置(ir, 节点)
             for 成员 in 节点.后续访问:

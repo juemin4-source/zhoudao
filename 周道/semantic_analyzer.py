@@ -76,6 +76,7 @@ class 语义分析器:
         self.类别方法表: dict = {}
         self.类别字段表: dict[str, set[str]] = {}
         self.入口是异步: bool = False
+        self.焦点栈: list[str] = []  # 遍历元素名栈（用于其解析）
 
     # ── 入口 ────────────────────────────────────────────────
 
@@ -141,12 +142,16 @@ class 语义分析器:
             ))
 
     def _解析名称(self, 名称: str, node) -> bool:
-        """解析名称：先查用户作用域，再查 PreludeScope。
-
-        Returns:
-            True 表示名称已解析（用户定义或 PreludeScope）
-            False 表示名称未知
-        """
+        """解析名称。其超出遍历范围时给出针对性诊断。"""
+        if 名称 == "其" and not self.焦点栈:
+            位置 = self._取位置(node) if node else None
+            self.诊断列表.append(语义诊断(
+                "「其」在此处没有可用的当前对象。"
+                "「其」只能在「每取一项」或「每等到一项」的主体中使用。"
+                "请写出明确名称，例如「用户的姓名」。",
+                位置=位置,
+            ))
+            return False
         try:
             self.格子.解析(名称)
             return True
@@ -239,8 +244,10 @@ class 语义分析器:
             self._检查函数上下文("每等到一项记作", stmt)
             self._分析表达式(stmt.集合)
             self._注册绑定(stmt.元素, "变量", stmt)
+            self.焦点栈.append(stmt.元素)
             for s in stmt.体:
                 self._分析语句(s)
+            self.焦点栈.pop()
         elif isinstance(stmt, 原样报出IR):
             if not self.在异常内:
                 self.诊断列表.append(语义诊断("原样报出只能在错误处理中使用"))
@@ -340,10 +347,11 @@ class 语义分析器:
         self._分析表达式(stmt.集合)
         self.循环深度 += 1
         self._进入控制作用域()
-        # 元素名在当前控制作用域中注册
         self._注册绑定(stmt.元素, "变量")
+        self.焦点栈.append(stmt.元素)
         for s in stmt.体:
             self._分析语句(s)
+        self.焦点栈.pop()
         self._离开控制作用域()
         self.循环深度 -= 1
 
