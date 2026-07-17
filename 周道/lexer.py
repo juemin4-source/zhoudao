@@ -5,11 +5,17 @@
 """
 
 from .errors import 源码位置, 词法错误
-from .tokens import Token, KW_MAP, KW_SORTED
+from .tokens import Token, KW_MAP, KW_SORTED, SourceSpan
 from .tokens import NUMBER, STRING, IDENTIFIER, COMMENT
 from .tokens import LIST_OPEN, LIST_CLOSE, MODULE_OPEN, MODULE_CLOSE
 from .tokens import PAREN_OPEN, PAREN_CLOSE, COMMA, DUN_HAO, PERIOD, COLON, SEMICOLON, EOF
-from .tokens import OP_SUB
+from .tokens import (
+    OP_SUB, OP_ADD, OP_MUL, OP_DIV,
+    SYM_ADD, SYM_SUB, SYM_MUL, SYM_DIV, SYM_POW,
+    SYM_FLOOR_DIV, SYM_MOD,
+    SYM_EQ, SYM_NE, SYM_GT, SYM_LT, SYM_GE, SYM_LE,
+    WORD_NEG,
+)
 
 
 # 单字标点映射
@@ -151,12 +157,7 @@ def 扫描(源码: str) -> list[Token]:
 
         # 单字标点
         if ch in _标点:
-            if ch == "【":
-                # 已在上面的文本字面量处理
-                pass
             token_type = _标点[ch]
-            # 如果是 【，表示文本开始但未闭合
-            # 这里已经预先处理了，不会到达这里
             tokens.append(Token(token_type=token_type, 值=ch, 位置=位置))
             i += 1
             列 += 1
@@ -165,9 +166,44 @@ def 扫描(源码: str) -> list[Token]:
                 列 = 1
             continue
 
-        # 负数：负 后跟数字 → 一元负号
+        # ===== ASCII 符号运算符 =====
+        # 多字符优先（按长度降序）
+        _多字符符号 = {
+            "**": SYM_POW,
+            "//": SYM_FLOOR_DIV,
+            "!=": SYM_NE,
+            "<=": SYM_LE,
+            ">=": SYM_GE,
+        }
+        # == 单独处理 → 专用诊断（不是兼容语法）
+        if ch == "=" and i + 1 < 长度 and 源码[i + 1] == "=":
+            raise 词法错误("周道使用「=」或「等于」判断相等。", 位置)
+        if i + 1 < 长度:
+            two_ch = 源码[i:i+2]
+            if two_ch in _多字符符号:
+                tok_type = _多字符符号[two_ch]
+                tokens.append(Token(token_type=tok_type, 原文=two_ch, 语义值=two_ch,
+                                    跨度=SourceSpan(行, 列, 2)))
+                i += 2; 列 += 2
+                continue
+
+        # 单字符符号
+        _单字符符号 = {
+            '+': SYM_ADD, '-': SYM_SUB, '*': SYM_MUL, '/': SYM_DIV,
+            '%': SYM_MOD, '=': SYM_EQ,
+            '<': SYM_LT, '>': SYM_GT,
+        }
+        if ch in _单字符符号:
+            tok_type = _单字符符号[ch]
+            tokens.append(Token(token_type=tok_type, 原文=ch, 语义值=ch,
+                                跨度=SourceSpan(行, 列, 1)))
+            i += 1; 列 += 1
+            continue
+
+        # 汉语一元负号：负 紧邻数字 → WORD_NEG（不是 OP_SUB）
         if ch == "负" and i + 1 < 长度 and 源码[i + 1].isdigit():
-            tokens.append(Token(token_type=OP_SUB, 值=ch, 位置=位置))
+            tokens.append(Token(token_type=WORD_NEG, 原文="负", 语义值="-",
+                                跨度=SourceSpan(行, 列, 1)))
             i += 1
             列 += 1
             continue

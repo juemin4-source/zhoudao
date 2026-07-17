@@ -4,6 +4,9 @@
 使用向前看（lookahead）处理「设」的分派歧义和「不然」/「否则」链。
 """
 
+import sys
+sys.setrecursionlimit(10000)
+
 from .errors import 源码位置, 语法错误
 from .tokens import (
     Token,
@@ -25,6 +28,10 @@ from .tokens import (
     OP_EQ, OP_NE, OP_GT, OP_LT, OP_GE, OP_LE,
     OP_AND, OP_OR, OP_NOT,
     OP_IN, OP_NOT_IN,
+    SYM_ADD, SYM_SUB, SYM_MUL, SYM_DIV, SYM_POW,
+    SYM_FLOOR_DIV, SYM_MOD,
+    SYM_EQ, SYM_NE, SYM_GT, SYM_LT, SYM_GE, SYM_LE,
+    WORD_NEG,
     LIT_TRUE, LIT_FALSE,
     K_AND_THEN, K_PRINT,
     K_DEFINE, K_SETUP, K_CATEGORY, K_INCLUDE, K_INCLUDE_LONG, K_DEFAULT_AS,
@@ -253,12 +260,19 @@ class 解析器:
             return 命题变更(目标=左值, 值=True, 位置=位置)
         elif self._匹配(K_FALSE_STATE):
             return 命题变更(目标=左值, 值=False, 位置=位置)
-        elif self._当前().token_type in (OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_FLOOR_DIV, OP_MOD):
+        elif self._当前().token_type in (OP_ADD, OP_SUB, OP_MUL, OP_DIV):
             算符令牌 = self._吃()
-            映射 = {OP_ADD: "+=", OP_SUB: "-=", OP_MUL: "*=", OP_DIV: "/=", OP_FLOOR_DIV: "//=", OP_MOD: "%="}
+            映射 = {OP_ADD: "+=", OP_SUB: "-=", OP_MUL: "*=", OP_DIV: "/="}
             return 算术变更(目标=左值, 算符=映射[算符令牌.token_type], 值=self._解析表达式(), 位置=位置)
+        elif self._当前().token_type in (SYM_ADD, SYM_SUB, SYM_MUL, SYM_DIV,
+                                         SYM_POW, SYM_FLOOR_DIV, SYM_MOD,
+                                         OP_FLOOR_DIV, OP_MOD):
+            raise 语法错误(
+                "「使」后需要变化动作：加、减、乘、除 或 变为。"
+                "不接受符号运算符。",
+                self._当前().位置)
         else:
-            raise 语法错误(f"使 {左值} 后缺少「变为」「成立/不成立」或算术算符", self._当前().位置)
+            raise 语法错误(f"使 {左值} 后缺少「变为」或变化动作", self._当前().位置)
 
     def _解析打印(self, 位置: 源码位置):
         return 打印(值=self._解析表达式(), 位置=位置)
@@ -1045,9 +1059,15 @@ class 解析器:
         OP_EQ: ("==", 30), OP_NE: ("!=", 30),
         OP_GT: (">", 30), OP_LT: ("<", 30),
         OP_GE: (">=", 30), OP_LE: ("<=", 30),
+        SYM_EQ: ("==", 30), SYM_NE: ("!=", 30),
+        SYM_GT: (">", 30), SYM_LT: ("<", 30),
+        SYM_GE: (">=", 30), SYM_LE: ("<=", 30),
         OP_ADD: ("+", 40), OP_SUB: ("-", 40),
+        SYM_ADD: ("+", 40), SYM_SUB: ("-", 40),
         OP_MUL: ("*", 50), OP_DIV: ("/", 50),
         OP_FLOOR_DIV: ("//", 50), OP_MOD: ("%", 50),
+        SYM_MUL: ("*", 50), SYM_DIV: ("/", 50),
+        SYM_FLOOR_DIV: ("//", 50), SYM_MOD: ("%", 50),
         OP_IN: ("in", 30), OP_NOT_IN: ("not_in", 30),
     }
 
@@ -1060,7 +1080,7 @@ class 解析器:
             算符名, _ = self._二元映射[self._当前().token_type]
             op_tok = self._吃()
             right = self._解析成员表达式()
-            left = 二元运算(left, 算符名, right)
+            left = 二元运算(left, 算符名, right, 表层算符=op_tok.原文)
             if op_tok.token_type in (OP_IN, OP_NOT_IN) and self._当前().token_type == K_IN:
                 self._吃()
         if self._当前().token_type == K_IS:
@@ -1094,28 +1114,46 @@ class 解析器:
 
     def _解析加性表达式(self):
         left = self._解析乘性表达式()
-        while self._当前().token_type in (OP_ADD, OP_SUB):
+        while self._当前().token_type in (OP_ADD, SYM_ADD, OP_SUB, SYM_SUB):
             当前 = self._吃()
             算符名, _ = self._二元映射[当前.token_type]
             right = self._解析乘性表达式()
-            left = 二元运算(left, 算符名, right)
+            left = 二元运算(left, 算符名, right, 表层算符=当前.原文)
         return left
 
     def _解析乘性表达式(self):
         left = self._解析前缀表达式()
-        while self._当前().token_type in (OP_MUL, OP_DIV, OP_FLOOR_DIV, OP_MOD):
+        while self._当前().token_type in (OP_MUL, SYM_MUL, OP_DIV, SYM_DIV,
+                                          OP_FLOOR_DIV, SYM_FLOOR_DIV, OP_MOD, SYM_MOD):
             当前 = self._吃()
             算符名, _ = self._二元映射[当前.token_type]
             right = self._解析前缀表达式()
-            left = 二元运算(left, 算符名, right)
+            left = 二元运算(left, 算符名, right, 表层算符=当前.原文)
         return left
 
     def _解析前缀表达式(self):
-        if self._当前().token_type == OP_SUB:
-            位置 = self._吃().位置
-            right = self._解析后缀起始()
-            return 一元运算("-", right, 位置=位置)
-        return self._解析后缀起始()
+        token = self._当前()
+        if token.token_type == SYM_SUB:
+            # 符号一元负号
+            self._吃()
+            right = self._解析幂表达式()  # -2**2 → -(2**2)
+            return 一元运算("-", right, 表层算符="-")
+        elif token.token_type == WORD_NEG:
+            # 汉语一元负号（负紧邻数字）
+            self._吃()
+            right = self._解析幂表达式()  # 负2**2 → -(2**2)
+            return 一元运算("-", right, 表层算符="负")
+        return self._解析幂表达式()
+
+    def _解析幂表达式(self):
+        """幂运算（**），右结合，独立于普通二元映射。"""
+        left = self._解析后缀起始()
+        if self._当前().token_type == SYM_POW:
+            self._吃()
+            # 右操作数走前缀表达式：2 ** -2 → 2**(-2)，右结合：a**b**c → a**(b**c)
+            right = self._解析前缀表达式()
+            return 二元运算(left, "**", right, 表层算符="**")
+        return left
 
     def _解析后缀起始(self):
         """解析原子 + 后缀操作链。"""

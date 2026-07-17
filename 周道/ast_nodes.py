@@ -352,14 +352,16 @@ class 变量(表达式):
 @dataclass
 class 二元运算(表达式):
     左: "表达式"
-    算符: str  # + - * / // % == != > < >= <= in not_in and or is
+    算符: str  # + - * / // % ** == != > < >= <= in not_in and or is
     右: "表达式"
+    表层算符: str = field(default="", kw_only=True)  # 原文："加" / "+"
 
 
 @dataclass
 class 一元运算(表达式):
     算符: str  # not -
     操作数: "表达式"
+    表层算符: str = field(default="", kw_only=True)  # 原文："负" / "-"
 
 
 @dataclass
