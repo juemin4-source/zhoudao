@@ -1,7 +1,60 @@
-"""周道：词法单元（Token）类型定义。"""
+"""周道：词法单元（Token）类型定义。
 
-from dataclasses import dataclass
+v0.0.10.5: Token 拆分为原文/语义值/SourceSpan。
+新增 Trivia 结构，010.5-A 只预留接口不填充 COMMENT。
+"""
+
+from dataclasses import dataclass, field
+from enum import Enum
 from .errors import 源码位置
+
+
+# ==================== SourceSpan（完整跨度） ====================
+
+@dataclass
+class SourceSpan:
+    """源码跨度：左闭右开范围。
+
+    列和长度以 Python 字符索引为单位。
+    LSP 输出时统一转换为 UTF-16 code units。
+    """
+    行: int
+    列: int      # 起始列（1-based）
+    长度: int    # 字符长度（** 为 2，>= 为 2，加 为 1）
+    文件: str = ""
+
+    @property
+    def 结束列(self) -> int:
+        return self.列 + self.长度  # 左闭右开
+
+    def 转LSP范围(self) -> dict:
+        """转换为 LSP 范围（UTF-16 code units）。"""
+        return {
+            "line": self.行 - 1,
+            "start": self.列 - 1,     # LSP 是 0-based
+            "end": self.列 + self.长度 - 1,
+        }
+
+    @staticmethod
+    def 从旧位置(位置: 源码位置, 长度: int = 1) -> "SourceSpan":
+        return SourceSpan(行=位置.行, 列=位置.列, 长度=长度)
+
+
+# ==================== Trivia（源码附属信息） ====================
+
+class TriviaKind(Enum):
+    WHITESPACE = "WHITESPACE"    # 空格、制表符
+    LINE_BREAK = "LINE_BREAK"    # 换行
+    COMMENT = "COMMENT"          # 注：…… 到行末（010.5-B 实现填充）
+    FILE_END = "FILE_END"        # 文件末尾空白
+
+
+@dataclass
+class Trivia:
+    """Token 的前导附属信息（唯一所有权：属于后随 Token）。"""
+    类型: TriviaKind
+    原文: str
+    跨度: SourceSpan
 
 
 # ==================== Token 类型常量 ====================
@@ -32,6 +85,25 @@ K_AS_RESULT = "K_AS_RESULT"
 K_IMPORT = "K_IMPORT"
 K_AND_THEN = "K_AND_THEN"
 K_PRINT = "K_PRINT"
+
+# 符号运算符（新增，v0.0.10.5）
+SYM_ADD = "SYM_ADD"           # +
+SYM_SUB = "SYM_SUB"           # -
+SYM_MUL = "SYM_MUL"           # *
+SYM_DIV = "SYM_DIV"           # /
+SYM_POW = "SYM_POW"           # **
+SYM_FLOOR_DIV = "SYM_FLOOR_DIV"  # //
+SYM_MOD = "SYM_MOD"           # %
+
+SYM_EQ = "SYM_EQ"             # =
+SYM_NE = "SYM_NE"             # !=
+SYM_GT = "SYM_GT"             # >
+SYM_LT = "SYM_LT"             # <
+SYM_GE = "SYM_GE"             # >=
+SYM_LE = "SYM_LE"             # <=
+
+# 汉语一元负号（仅数值语境）
+WORD_NEG = "WORD_NEG"         # 负（紧邻数字时）
 
 # 关键字类型（第二批）
 K_DEFINE = "K_DEFINE"             # 定义
@@ -205,10 +277,46 @@ KW_SORTED = sorted(KW_MAP.keys(), key=len, reverse=True)
 @dataclass
 class Token:
     token_type: str
-    值: str
-    位置: 源码位置
+    原文: str = ""
+    语义值: object = ""
+    跨度: SourceSpan | None = None
     是否精确: bool = False  # IDENTIFIER 是否来自花括号精确名称
+    前导Trivia: list[Trivia] = field(default_factory=list)
+
+    def __init__(self, token_type: str, 值: str = "",
+                 位置: 源码位置 | None = None,
+                 *,
+                 原文: str | None = None,
+                 语义值: object | None = None,
+                 跨度: SourceSpan | None = None,
+                 是否精确: bool = False,
+                 前导Trivia: list[Trivia] | None = None):
+        """向后兼容构造：旧式 `Token(type, 值, 位置)` 自动适配。
+
+        新代码推荐使用显式关键字参数。
+        """
+        self.token_type = token_type
+        self.原文 = 原文 if 原文 is not None else 值
+        self.语义值 = 语义值 if 语义值 is not None else 值
+        self.跨度 = 跨度 if 跨度 is not None else (
+            SourceSpan(行=位置.行, 列=位置.列, 长度=len(值)) if 位置 else None
+        )
+        self.是否精确 = 是否精确
+        self.前导Trivia = 前导Trivia if 前导Trivia is not None else []
+
+    @property
+    def 值(self) -> str:
+        """返回原文（旧代码兼容）。"""
+        return self.原文
+
+    @property
+    def 位置(self) -> 源码位置 | None:
+        """返回起点的旧式位置（旧代码兼容）。"""
+        if self.跨度 is None:
+            return None
+        return 源码位置(行=self.跨度.行, 列=self.跨度.列, 索引=self.跨度.列 - 1)
 
     def __repr__(self) -> str:
         后缀 = " (精确)" if self.是否精确 else ""
-        return f"Token({self.token_type}, {self.值!r}{后缀}, {self.位置})"
+        span_str = f" @{self.跨度.行}:{self.跨度.列}+{self.跨度.长度}" if self.跨度 else ""
+        return f"Token({self.token_type}, {self.原文!r}{span_str}{后缀})"
