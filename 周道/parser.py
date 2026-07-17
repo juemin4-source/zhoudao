@@ -73,6 +73,7 @@ class 解析器:
         self._在定义内 = False  # 是否在函数定义中
         self._在异常内 = False  # 是否在 except 子句中
         self._循环深度 = 0     # 嵌套循环深度（用于检查 break/continue）
+        self._待定注释: list[str] = []  # 待附着的注释行
 
     # ==================== 辅助方法 ====================
 
@@ -112,16 +113,35 @@ class 解析器:
 
     def 解析(self) -> 程序:
         程序节点 = 程序()
-        self.令牌 = [t for t in self.令牌 if t.token_type != COMMENT]
+        self._待定注释: list[str] = []
         while self._当前().token_type != EOF:
             句子节点 = self._解析一句()
-            if 句子节点.语句列表:
+            if 句子节点.语句列表 or 句子节点.前导注释 or 句子节点.尾行注释:
                 程序节点.句子列表.append(句子节点)
         return 程序节点
 
+    def _吃注释(self):
+        """消费前置的 COMMENT Token 并收集到待定注释列表。"""
+        while self._当前().token_type == COMMENT:
+            self._待定注释.append(self._吃().值)
+
     def _解析一句(self) -> 句子:
         语句列表: list = []
+        # 收集句子前的注释
+        self._吃注释()
+        前导注释 = list(self._待定注释)
+        self._待定注释.clear()
+        尾行注释 = None
+
         while self._当前().token_type not in (PERIOD, EOF):
+            # 遇到注释：如果当前句子已有内容则视为尾行注释，否则为前导
+            if self._当前().token_type == COMMENT:
+                注释 = self._吃().值
+                if 语句列表:
+                    尾行注释 = 注释
+                else:
+                    前导注释.append(注释)
+                continue
             语句 = self._解析顶层语句()
             if 语句 is not None:
                 语句列表.append(语句)
@@ -131,7 +151,14 @@ class 解析器:
                 self._吃()  # 分号作为句内动作分隔符，继续下一动作
         if self._当前().token_type == PERIOD:
             self._吃()
-        return 句子(语句列表=语句列表)
+
+        # 句子末尾的注释作为尾行注释
+        if self._当前().token_type == COMMENT:
+            尾行注释 = self._吃().值
+        elif not 语句列表 and not 前导注释:
+            pass  # 空句子
+
+        return 句子(语句列表=语句列表, 前导注释=前导注释, 尾行注释=尾行注释)
 
     # ==================== 顶层语句分派 ====================
 

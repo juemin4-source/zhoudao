@@ -155,10 +155,15 @@ class 周道格式化器:
         self.缩进层级 = 0
         self.行首 = True
         for 句子 in 程序.句子列表:
+            for 注释 in 句子.前导注释:
+                self._写行(注释)
             for 语句 in 句子.语句列表:
                 self._格式化语句(语句)
-            if 句子.语句列表:
-                self._写行("。")
+            if 句子.语句列表 or 句子.前导注释:
+                self._写("。")
+                if 句子.尾行注释:
+                    self._写(f" {句子.尾行注释}")
+                self._写行()
         return "".join(self.输出).strip() + "\n"
 
     def _格式化语句(self, 节点):

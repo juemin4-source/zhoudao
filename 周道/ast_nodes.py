@@ -21,6 +21,8 @@ class 程序(节点):
 @dataclass
 class 句子(节点):
     语句列表: list["语句"] = field(default_factory=list)
+    前导注释: list[str] = field(default_factory=list)
+    尾行注释: str | None = None
 
 
 # === 语句 ===
