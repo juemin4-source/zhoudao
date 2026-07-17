@@ -149,6 +149,7 @@ class 周道LSP:
         from .tokens import K_PRINT, K_IF, K_WHILE, K_FROM, K_TRY
         from .tokens import K_IMPORT, K_RAISE, K_YIELD, K_AWAIT, K_ENTRY
         from .tokens import K_RERAISE, K_PASS, K_MATCH, K_INTERFACE
+        from .tokens import WORD_NEG
 
         T_KEYWORD = 0
         T_STRING = 3
@@ -195,6 +196,10 @@ class 周道LSP:
             elif tok.token_type.startswith("K_"):
                 ttype = T_KEYWORD
             elif tok.token_type.startswith("OP_"):
+                ttype = T_KEYWORD
+            elif tok.token_type.startswith("SYM_"):
+                ttype = T_KEYWORD
+            elif tok.token_type == WORD_NEG:
                 ttype = T_KEYWORD
             elif tok.token_type == IDENTIFIER:
                 if tok.是否精确:
