@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "spec": "周道语言规范 1.0",
+    "section": "形式语法 — 运算符优先级",
+    "note": "数值越大优先级越高。同一优先级的算符左结合。"
+  },
+  "levels": [
+    {
+      "level": 90,
+      "associativity": "left",
+      "operators": ["的（成员访问）", "【】（字符串下标）", "［］（表达式下标）", "（）（调用）"],
+      "description": "后缀运算符"
+    },
+    {
+      "level": 80,
+      "associativity": "right",
+      "operators": ["并非"],
+      "description": "逻辑非"
+    },
+    {
+      "level": 70,
+      "associativity": "left",
+      "operators": ["乘", "除", "整除", "余"],
+      "description": "乘法类算符"
+    },
+    {
+      "level": 60,
+      "associativity": "left",
+      "operators": ["加", "减"],
+      "description": "加法类算符"
+    },
+    {
+      "level": 50,
+      "associativity": "left",
+      "operators": ["大于", "小于", "不少于", "不多于", "等于", "不等于", "在", "不在", "就是", "不是"],
+      "description": "比较算符（不可结合）"
+    },
+    {
+      "level": 40,
+      "associativity": "left",
+      "operators": ["且"],
+      "description": "逻辑与"
+    },
+    {
+      "level": 30,
+      "associativity": "left",
+      "operators": ["或"],
+      "description": "逻辑或"
+    }
+  ],
+  "notes": [
+    "比较算符在同一表达式中不可链式使用。若同一表达式出现多个比较算符，解析器应报歧义错误。",
+    "成员访问（的）优先级最高，在任何二元算符之前求值。",
+    "并非 是唯一的一元运算符。"
+  ]
+}

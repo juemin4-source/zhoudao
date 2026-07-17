@@ -1,0 +1,69 @@
+{
+  "meta": {
+    "spec": "周道语言规范 1.0",
+    "section": "第四层 — 弃用语法",
+    "note": "deprecated: Parser 接收但不再出现在正式教程中。Formatter 将其改写为正式形式。permanently_illegal: 在任何版本中都非法。"
+  },
+  "deprecated": [
+    {
+      "old": "元组［甲、乙］",
+      "new": "固定序列［甲、乙］",
+      "versionDeprecated": "008",
+      "plannedRemoval": "012",
+      "reason": "元组是 tuple 的传统译名，字面无法说明含义。"
+    },
+    {
+      "old": "引入《os》",
+      "new": "引入Python模块《os》",
+      "versionDeprecated": "008",
+      "plannedRemoval": "012",
+      "reason": "未显式说明模块来源。"
+    },
+    {
+      "old": "从《os》中引入 path",
+      "new": "从Python模块《os》中引入 path",
+      "versionDeprecated": "008",
+      "plannedRemoval": "012",
+      "reason": "未显式说明模块来源。"
+    },
+    {
+      "old": "本文公开 整理",
+      "new": "规定模块接口：整理",
+      "versionDeprecated": "008",
+      "plannedRemoval": "012",
+      "reason": "本文公开含义模糊。"
+    },
+    {
+      "old": "引入周道文《工具》",
+      "new": "引入周道源文件《工具》",
+      "versionDeprecated": "008",
+      "plannedRemoval": "012",
+      "reason": "周道文与周道源文件不一致。"
+    },
+    {
+      "old": "从周道文《工具》中引入整理",
+      "new": "从周道源文件《工具》中引入整理",
+      "versionDeprecated": "008",
+      "plannedRemoval": "012",
+      "reason": "周道文与周道源文件不一致。"
+    },
+    {
+      "old": "设结果为等待甲的所得",
+      "new": "等待甲完成，记作结果",
+      "versionDeprecated": "009",
+      "plannedRemoval": "012",
+      "reason": "套娃句式，可读性差。"
+    }
+  ],
+  "permanentlyIllegal": [
+    "规定模块接口：",
+    "规定模块接口：整理、",
+    "规定模块接口：整理。规定模块接口：统计。（重复）",
+    "运行如下：在文章中间位置",
+    "多个运行如下",
+    "精确名称跨行",
+    "表达式内部直接出现 { 未闭合",
+    "使用半角逗号 , 代替 ，",
+    "使用引号 \" 代替 【】"
+  ]
+}
