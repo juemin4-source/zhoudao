@@ -1,7 +1,7 @@
-# Python ↔ 周道对应表 v1.0
+# Python ↔ 周道对应表 v1.1
 
-> 版本：0.0.10
-> 等价级别：EXACT / INTENT_EQUIVALENT / SUBSET / ZHOUDAO_NATIVE / UNSUPPORTED
+> 版本：0.0.10.5
+> 等价级别：EXACT / INTENT_EQUIVALENT / SUBSET / ZHOUDAO_NATIVE / UNSUPPORTED / ACCEPTED_LEGACY_ALIAS
 
 ---
 
@@ -21,37 +21,37 @@
 | `True` | 真值 | 真 | `真` | EXACT | 冻结基线 | ✅ |
 | `False` | 假值 | 假 | `假` | EXACT | 冻结基线 | ✅ |
 | `None` | 空值 | 没有值 | `没有值` | EXACT | tests | ✅ |
-| `-3` | 负整数 | 负三 | `负3` | ZHOUDAO_NATIVE | lexer OP_SUB | ⚠️ |
+| `-3` | 负整数 | 负三 | `负3` / `-3` | EXACT | WORD_NEG + NUMBER / SYM_SUB + NUMBER | ✅ |
 
-## 二、运算符
+### 运算符（全部双表层：汉语式 / 数学符号）
 
-| Python | 实际语义 | 母语内语 | 周道 | 级别 | 实现证据 | 状态 |
-|--------|---------|---------|------|------|---------|------|
-| `a + b` | 加法 | a 加 b | `a加b` | EXACT | parser | ✅ |
-| `a - b` | 减法 | a 减 b | `a减b` | EXACT | parser | ✅ |
-| `a * b` | 乘法 | a 乘 b | `a乘b` | EXACT | parser | ✅ |
-| `a / b` | 除法 | a 除 b | `a除b` | EXACT | parser | ✅ |
-| `a // b` | 整数除法 | a 整除 b | `a整除b` | EXACT | parser | ✅ |
-| `a % b` | 取余 | a 余 b | `a余b` | EXACT | parser | ✅ |
-| `a ** b` | 幂 | a 的 b 次方 | — | UNSUPPORTED | — | 🔮 |
-| `-x` | 取负 | 负 x | `负x` | ZHOUDAO_NATIVE | lexer | ⚠️ |
-| `a == b` | 等于 | a 等于 b | `a等于b` | EXACT | tests | ✅ |
-| `a != b` | 不等于 | a 不等于 b | `a不等于b` | EXACT | tests | ✅ |
-| `a > b` | 大于 | a 大于 b | `a大于b` | EXACT | tests | ✅ |
-| `a < b` | 小于 | a 小于 b | `a小于b` | EXACT | tests | ✅ |
-| `a >= b` | 大于等于 | a 大于等于 b | `a大于等于b` | EXACT | tokens 010.5 | ✅ |
-| `a <= b` | 小于等于 | a 小于等于 b | `a小于等于b` | EXACT | tokens 010.5 | ✅ |
+| Python | 实际语义 | 汉语式 | 数学符号 | 级别 | 实现证据 | 状态 |
+|--------|---------|--------|---------|------|---------|------|
+| `a + b` | 加法 | `a加b` | `a + b` | EXACT | parser OP_ADD / SYM_ADD | ✅ |
+| `a - b` | 减法 | `a减b` | `a - b` | EXACT | parser OP_SUB / SYM_SUB | ✅ |
+| `a * b` | 乘法 | `a乘b` | `a * b` | EXACT | parser OP_MUL / SYM_MUL | ✅ |
+| `a / b` | 除法 | `a除b` | `a / b` | EXACT | parser OP_DIV / SYM_DIV | ✅ |
+| `a // b` | 向下取整除 | `a整除b` | `a // b` | EXACT | ACCEPTED_LEGACY_ALIAS + SYM_FLOOR_DIV | ✅ |
+| `a % b` | 模运算 | `a余b` | `a % b` | EXACT | ACCEPTED_LEGACY_ALIAS + SYM_MOD | ✅ |
+| `a ** b` | 幂 | — | `a ** b` | EXACT | SYM_POW 独立右结合语法层 | ✅ |
+| `-x` | 取负 | `负3`（仅数字） | `-x` | EXACT | WORD_NEG / SYM_SUB 一元运算 | ✅ |
+| `a == b` | 等于 | `a等于b` | `a = b` | EXACT | OP_EQ / SYM_EQ | ✅ |
+| `a != b` | 不等于 | `a不等于b` | `a != b` | EXACT | OP_NE / SYM_NE | ✅ |
+| `a > b` | 大于 | `a大于b` | `a > b` | EXACT | OP_GT / SYM_GT | ✅ |
+| `a < b` | 小于 | `a小于b` | `a < b` | EXACT | OP_LT / SYM_LT | ✅ |
+| `a >= b` | 大于等于 | `a不少于b` | `a >= b` | EXACT | OP_GE / SYM_GE | ✅ |
+| `a <= b` | 小于等于 | `a不多于b` | `a <= b` | EXACT | OP_LE / SYM_LE | ✅ |
 | 链式比较 `a < b < c` | 连续比较 | — | — | UNSUPPORTED | — | 🔮 |
-| `x in ys` | 成员关系 | x 在 ys 中 | `x在ys中` | EXACT | tests | ✅ |
-| `x not in ys` | 非成员 | x 不在 ys | `x不在ys中` | EXACT | tests | ✅ |
-| `a is b` | 身份 | a 就是 b | `a就是b` | EXACT | tests | ✅ |
-| `a is not b` | 身份否定 | a 不是 b | `a不是b本身` | EXACT | tests | ✅ |
-| `a and b` | 逻辑与 | a 且 b | `a且b` | INTENT_EQUIVALENT | tests | ⚠️ |
-| `a or b` | 逻辑或 | a 或 b | `a或b` | INTENT_EQUIVALENT | tests | ⚠️ |
-| `not a` | 逻辑非 | 并非 a | `并非（a）` | INTENT_EQUIVALENT | tests | ✅ |
-| `a.b` | 成员访问 | a 的 b | `a的b` | EXACT | tests | ✅ |
-| `a[i]` | 下标 | a 下标 i | `a［i］` | EXACT | tests | ✅ |
-| `a[i:j]` | 切片 | a 切片 | `a［i：j］` | EXACT | tests | ✅ |
+| `x in ys` | 成员关系 | `x在ys中` | — | EXACT | OP_IN | ✅ |
+| `x not in ys` | 非成员 | `x不在ys中` | — | EXACT | OP_NOT_IN | ✅ |
+| `a is b` | 身份 | `a就是b` | — | EXACT | K_IS | ✅ |
+| `a is not b` | 身份否定 | `a不是b本身` | — | EXACT | K_IS_NOT + K_SELF | ✅ |
+| `a and b` | 逻辑与 | `a且b` | — | INTENT_EQUIVALENT | OP_AND | ⚠️ |
+| `a or b` | 逻辑或 | `a或b` | — | INTENT_EQUIVALENT | OP_OR | ⚠️ |
+| `not a` | 逻辑非 | `并非（a）` | — | INTENT_EQUIVALENT | OP_NOT | ✅ |
+| `a.b` | 成员访问 | `a的b` | — | EXACT | K_DE | ✅ |
+| `a[i]` | 下标 | `a［i］` | — | EXACT | parser | ✅ |
+| `a[i:j]` | 切片 | `a［i：j］` | — | EXACT | parser | ✅ |
 
 ## 三、语句
 
