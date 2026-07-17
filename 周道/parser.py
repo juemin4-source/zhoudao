@@ -32,6 +32,7 @@ from .tokens import (
     SYM_FLOOR_DIV, SYM_MOD,
     SYM_EQ, SYM_NE, SYM_GT, SYM_LT, SYM_GE, SYM_LE,
     WORD_NEG,
+    K_ITS,
     LIT_TRUE, LIT_FALSE,
     K_AND_THEN, K_PRINT,
     K_DEFINE, K_SETUP, K_CATEGORY, K_INCLUDE, K_INCLUDE_LONG, K_DEFAULT_AS,
@@ -59,6 +60,7 @@ from .ast_nodes import (
     身份判断, 等待表达式, 当前错误, 错误文本,
     成员访问, 字符串下标, 表达式下标,
     切片下标, 映射字面量,
+    上下文成员访问,
     元组字面量, 集合字面量,
     表达式,
 )
@@ -1184,8 +1186,24 @@ class 解析器:
 
     def _解析后缀起始(self):
         """解析原子 + 后缀操作链。"""
+        if self._当前().token_type == K_ITS:
+            return self._解析上下文物件()
         left = self._解析原子()
         return self._解析后缀链(left)
+
+    def _解析上下文物件(self):
+        """解析其姓名、其地址的城市等结构焦点访问。"""
+        位置 = self._吃().位置  # 消费 其
+        首成员 = self._期望(IDENTIFIER, 错误消息="「其」后缺少成员名称").值
+        后续 = []
+        while self._当前().token_type == K_DE:
+            self._吃()
+            if self._当前().token_type == IDENTIFIER:
+                后续.append(self._吃().值)
+            else:
+                raise 语法错误("「其」的成员链「的」后缺少成员名", self._当前().位置)
+        return 上下文成员访问(上下文种类="ITEM_FOCUS", 首成员=首成员,
+                               后续访问=后续, 位置=位置)
 
     def _解析后缀链(self, left):
         """解析后缀操作链（成员访问、下标、函数调用）并应用到 left。"""

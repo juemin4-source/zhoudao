@@ -432,6 +432,14 @@ class 切片下标(表达式):
 
 
 @dataclass
+class 上下文成员访问(表达式):
+    """结构焦点领属访问：其姓名、其状态。"""
+    上下文种类: str  # "ITEM_FOCUS"
+    首成员: str
+    后续访问: list = field(default_factory=list)
+
+
+@dataclass
 class 映射字面量(表达式):
     """［【键】为【值】、…］ 映射字面量"""
     条目: list[tuple["表达式", "表达式"]] = field(default_factory=list)

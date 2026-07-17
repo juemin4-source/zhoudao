@@ -341,6 +341,10 @@ class 周道格式化器:
             self._写("）")
         elif isinstance(节点, AST.成员访问):
             self._化表达式(节点.对象); self._写(f"的{节点.成员}")
+        elif isinstance(节点, AST.上下文成员访问):
+            self._写(f"其{节点.首成员}")
+            for 成员 in 节点.后续访问:
+                self._写(f"的{成员}")
         elif isinstance(节点, AST.列表字面量):
             self._写("［")
             for i, e in enumerate(节点.元素):

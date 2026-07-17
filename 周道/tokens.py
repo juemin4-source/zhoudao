@@ -105,6 +105,9 @@ SYM_LE = "SYM_LE"             # <=
 # 汉语一元负号（仅数值语境）
 WORD_NEG = "WORD_NEG"         # 负（紧邻数字时）
 
+# 结构指称
+K_ITS = "K_ITS"               # 其（结构焦点领属前缀）
+
 # 关键字类型（第二批）
 K_DEFINE = "K_DEFINE"             # 定义
 K_SETUP = "K_SETUP"               # 设置
@@ -268,6 +271,7 @@ KW_MAP = {
     "每等到一项记作": K_AWAIT_EACH,
     "原样报出当前错误": K_RERAISE,
     "的": K_DE,
+    "其": K_ITS,
 }
 
 # 按长度降序排列的关键字列表（词法层最长匹配）
