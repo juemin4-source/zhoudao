@@ -6,3 +6,5 @@ dist/
 err.txt
 out.txt
 *.bak
+dist/
+build/
