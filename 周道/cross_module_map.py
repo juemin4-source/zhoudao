@@ -16,12 +16,15 @@ class 跨模块SourceMap:
     """
 
     def __init__(self):
-        # 文件路径 → {Python行号 → 周道源码位置}
+        # 文件路径 → {Python行号 → 周道源码位置}（简易映射）
         self._模块映射: dict[str, dict[int, 源码位置]] = {}
+        # 文件路径 → BackendSourceMap（全量映射）
+        self._source_maps: dict[str, object] = {}
 
-    def register(self, 文件路径: str, 行映射: dict[int, 源码位置]) -> None:
-        """注册一个模块的行映射。"""
-        self._模块映射[文件路径] = 行映射
+    def register(self, 文件路径: str, 行映射: dict[int, 源码位置] | None = None) -> None:
+        """注册一个模块的行映射（兼容旧式 dict 映射）。"""
+        if 行映射 is not None:
+            self._模块映射[文件路径] = 行映射
 
     def lookup(self, 文件路径: str, py_lineno: int) -> 源码位置 | None:
         """查询 Python 行号对应的周道源码位置。"""
@@ -32,6 +35,18 @@ class 跨模块SourceMap:
 
     @property
     def registered_modules(self) -> list[str]:
+        return list(self._模块映射.keys())
+
+    def register_source_map(self, 文件路径: str, source_map) -> None:
+        """注册一个模块的全量 BackendSourceMap（含 Python AST 级映射）。"""
+        self._source_maps[文件路径] = source_map
+
+    def get_source_map(self, 文件路径: str):
+        """获取模块的全量 BackendSourceMap。"""
+        return self._source_maps.get(文件路径)
+
+    @property
+    def 所有模块(self) -> list[str]:
         return list(self._模块映射.keys())
 
     def format_traceback(self, frames: list[tuple[str, int, str]]) -> str:

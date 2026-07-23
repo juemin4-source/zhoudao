@@ -1,10 +1,15 @@
-# 011 成立审计验收报告
+# 011 成立审计验收报告 — 历史记录
 
-## 裁决：ZHOUDAO_PYTHON_DIALECT_ESTABLISHED
+> **状态**：历史记录（2026-07-18）
+> **说明**：本文件反映的是验收时的候选状态。后续审计（AUDIT-011-R1）发现以下偏差：
+> - P1 实际无法编译，但被声明为通过
+> - 版本标签声明的 0.0.10 与包版本 0.0.9 不一致
+> - 测试存在恒真断言和错误阶段冒充问题（已在 AUDIT-011-R1 中修复）
+> 
+> 当前仓库事实状态以 `REALITY-BASELINE.md` 为准。
+> 旧裁决 `ZHOUDAO_PYTHON_DIALECT_ESTABLISHED` 暂不成立。
 
----
-
-## 测试结果
+## 原裁决（历史）：ZHOUDAO_PYTHON_DIALECT_ESTABLISHED
 
 ```
 685 passed, 0 skipped, 0 failed

@@ -1532,8 +1532,8 @@ class Test版本号:
     """版本号正确性验证。"""
 
     def test_版本号(self):
-        """__version__ 为 0.0.9。"""
-        assert __version__ == "0.0.9"
+        """__version__ 为 0.0.10rc1。"""
+        assert __version__ == "0.0.10rc1"
 
     def test_版本号字符串(self):
         """版本号是字符串。"""

@@ -39,7 +39,8 @@ class Test环境解析:
         cfg = ProjectConfig(name="test", interpreter=sys.executable)
         环境 = 解析环境(cfg)
         assert 环境.解释器路径 == sys.executable
-        assert "3.12" in 环境.python版本
+        expected_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+        assert expected_version in 环境.python版本
         assert len(环境.搜索路径) > 0
 
     def test_解释器不可执行(self):

@@ -294,7 +294,8 @@ class Token:
                  语义值: object | None = None,
                  跨度: SourceSpan | None = None,
                  是否精确: bool = False,
-                 前导Trivia: list[Trivia] | None = None):
+                 前导Trivia: list[Trivia] | None = None,
+                 前导空白: bool = False):
         """向后兼容构造：旧式 `Token(type, 值, 位置)` 自动适配。
 
         新代码推荐使用显式关键字参数。
@@ -307,6 +308,7 @@ class Token:
         )
         self.是否精确 = 是否精确
         self.前导Trivia = 前导Trivia if 前导Trivia is not None else []
+        self.前导空白 = 前导空白  # Token 前是否有显式空白（空格/制表符/换行）
 
     @property
     def 值(self) -> str:

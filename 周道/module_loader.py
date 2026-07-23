@@ -15,10 +15,13 @@ from .parser import 解析器
 from .lowering import 降低
 from .semantic_analyzer import 分析 as 语义分析
 from .ast_backend import PythonAstBackend
+from types import SimpleNamespace
 from .errors import 周道错误, 语法错误, 语义错误
-from .core_ir import 文章类型, 程序入口IR, 公开声明IR, 本地模块引入IR
+from .core_ir import (文章类型, 程序入口IR, 公开声明IR, 本地模块引入IR,
+                       从本地模块引入IR, 导入别名IR)
 from .module_resolver import ModuleResolver
 from .module_registry import ModuleRegistry, 循环引入错误
+from .cross_module_map import 跨模块SourceMap
 
 
 class ModuleLoader:
@@ -31,6 +34,7 @@ class ModuleLoader:
         self.resolver = ModuleResolver(模块根目录)
         self.registry = ModuleRegistry()
         self._跨模块映射: dict[str, dict[int, Any]] = {}  # 文件路径 → 行映射
+        self.跨模块SourceMap = 跨模块SourceMap()
 
     # ── 核心加载 ──
 
@@ -71,10 +75,11 @@ class ModuleLoader:
             ir = result.ir
             位置映射 = result.位置映射
 
-            # 递归加载模块依赖
+            # 递归加载模块依赖（以本模块自身目录为解析基准）
+            本模块目录 = os.path.dirname(路径)
             for stmt in ir.语句列表:
-                if isinstance(stmt, 本地模块引入IR):
-                    self.load_module(stmt.模块名, 当前目录)
+                if isinstance(stmt, (本地模块引入IR, 从本地模块引入IR)):
+                    self.load_module(stmt.模块名, 本模块目录)
 
             # 语义分析
             sem_prog = 语义分析(ir, 位置映射)
@@ -93,12 +98,39 @@ class ModuleLoader:
                 elif has_public:
                     ir.文章类型 = 文章类型.模块
 
-            # 编译并初始化（跳过运行入口）
+            # 编译（跳过运行入口）
             backend = PythonAstBackend(位置映射, 源码=源码)
             code = self._编译模块(backend, ir, 路径)
 
-            # 执行模块初始化（只执行顶层定义）
+            # 构建模块环境（含运行时助手和导入绑定，必须在 exec 前准备）
             模块环境: dict = {"__name__": f"__周道__{模块名}__", "__spec__": None}
+            # 注入运行时助手（单一事实源）
+            from .runtime_environment import 注入运行时助手
+            注入运行时助手(模块环境)
+
+            # 解析模块引入：名称注入和模块绑定（以本模块目录为解析基准）
+            # 必须在 exec 前完成，使顶层代码能直接使用引入名称
+            for stmt in ir.语句列表:
+                if isinstance(stmt, 从本地模块引入IR):
+                    依赖成员 = self.load_module(stmt.模块名, 本模块目录)
+                    for 名称 in stmt.名称:
+                        if 名称 in 依赖成员:
+                            模块环境[名称] = 依赖成员[名称]
+                        else:
+                            raise 周道错误(
+                                f"模块「{stmt.模块名}」没有公开成员「{名称}」",
+                            )
+                elif isinstance(stmt, 本地模块引入IR):
+                    依赖成员 = self.load_module(stmt.模块名, 本模块目录)
+                    模块对象 = self._创建模块对象(依赖成员)
+                    绑定名 = stmt.别名 if stmt.别名 else stmt.模块名
+                    模块环境[绑定名] = 模块对象
+                elif isinstance(stmt, 导入别名IR):
+                    依赖成员 = self.load_module(stmt.模块, 本模块目录)
+                    模块对象 = self._创建模块对象(依赖成员)
+                    模块环境[stmt.别名] = 模块对象
+
+            # 执行模块顶层代码（此时环境已包含全部导入绑定和助手）
             exec(code, 模块环境)
 
             # 提取公开成员
@@ -107,11 +139,24 @@ class ModuleLoader:
             # 缓存
             self.registry.register(路径, 公开成员)
             self._跨模块映射[路径] = backend.行映射
+            # 注册源码映射到跨模块SourceMap
+            self.跨模块SourceMap.register(路径, backend.行映射)
+            if hasattr(backend, '源码映射'):
+                self.跨模块SourceMap.register_source_map(路径, backend.源码映射)
 
             return 公开成员
 
         finally:
             self.registry.完成加载(路径)
+
+    @staticmethod
+    def _创建模块对象(公开成员: dict[str, Any]) -> SimpleNamespace:
+        """创建周道模块绑定对象。
+
+        该对象提供成员访问语义：工具的整理 → 模块对象.整理
+        与周道成员访问制度一致。同一模块的重复引入返回相同对象的缓存。
+        """
+        return SimpleNamespace(**公开成员)
 
     def _编译模块(self, backend: PythonAstBackend, ir, 路径: str) -> types.CodeType:
         """编译模块代码（跳过运行入口）。"""
@@ -133,10 +178,12 @@ class ModuleLoader:
             # 显式公开模式：只返回列表中的名称
             return {name: 模块环境.get(name) for name in 公开名称 if name in 模块环境}
 
-        # 默认公开模式：返回所有顶层普通绑定（非内部名称）
+        # 默认公开模式：返回所有顶层普通绑定（排除内部运行时助手）
+        from .runtime_environment import 获取助手名称集合
+        _内部助手 = 获取助手名称集合()
         result = {}
         for k, v in 模块环境.items():
-            if not k.startswith("__"):
+            if not k.startswith("__") and k not in _内部助手:
                 result[k] = v
         return result
 

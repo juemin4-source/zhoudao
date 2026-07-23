@@ -43,6 +43,8 @@ from .core_ir import (
 from .errors import 源码位置, 周道错误, 运行时错误, 语义错误
 from .semantic_program import SemanticProgram
 from .runtime_traceback import 包装运行时异常
+from .method_aliases import 是否已知别名 as _是否已知别名
+from .backend_source_map import BackendSourceMap, SourceMapRecord
 
 
 # ── 算符映射表 ──────────────────────────────────────────────
@@ -108,6 +110,8 @@ class PythonAstBackend:
         self._需要顶层导入: list[ast.stmt] = []
         self._类别方法self名: str | None = None
         self._错误类型映射: dict[str, str] = {"运行出错": "RuntimeError", "值出错": "ValueError", "类型出错": "TypeError", "键出错": "KeyError", "索引出错": "IndexError", "文件未找到出错": "FileNotFoundError"}
+        # 013 阶段 D: 后端源码映射
+        self.源码映射: BackendSourceMap = BackendSourceMap()
 
     # ── 位置管理 ─────────────────────────────────────────────
 
@@ -134,14 +138,27 @@ class PythonAstBackend:
         node.end_col_offset = end_col
 
     def _设节点位置(self, node: ast.AST, ir_node) -> None:
-        """从 IR 节点取周道位置并设到 AST 节点上。
-
-        Python ast 使用 0-based col_offset，周道使用 1-based 列。
-        """
+        """从 IR 节点取周道位置并设到 AST 节点上。同时记录源码映射。"""
         pos = self._取源码位置(ir_node)
         if pos is not None:
-            py_col = max(0, pos.列 - 1)  # 周道 1-based → Python 0-based
+            py_col = max(0, pos.列 - 1)
             self._设位置(node, pos.行, py_col, pos.行, py_col + 1)
+        self._记录映射(node, ir_node)
+
+    # ── 源码映射 ──────────────────────────────────────────
+
+    def _记录映射(self, py_node: ast.AST, ir_node=None,
+                  is_synthetic: bool = False,
+                  synthetic_reason: str = "") -> None:
+        if not hasattr(py_node, 'lineno'):
+            return
+        周道位置 = self._取源码位置(ir_node) if ir_node is not None else None
+        origin_id = id(ir_node) if ir_node is not None else None
+        self.源码映射.add_mapping(
+            backend_node_id=id(py_node), python_node=py_node,
+            周道位置=周道位置, origin_node_id=origin_id,
+            is_synthetic=is_synthetic, synthetic_reason=synthetic_reason,
+        )
 
     # ── 入口 ─────────────────────────────────────────────────
 
@@ -236,10 +253,9 @@ class PythonAstBackend:
         _sys.modules["__周道__"].__dict__.update(环境)
         if 全局变量:
             环境.update(全局变量)
-        # 注入 JSON 边界函数
-        from .json_boundary import 解析JSON, 生成JSON
-        环境["解析JSON"] = 解析JSON
-        环境["生成JSON"] = 生成JSON
+        # 注入运行时助手（单一事实源）
+        from .runtime_environment import 注入运行时助手
+        注入运行时助手(环境)
 
         try:
             exec(code, 环境)
@@ -372,10 +388,14 @@ class PythonAstBackend:
     def _发射打印(self, node: 打印IR) -> ast.stmt:
         line = self._new_line(self._取源码位置(node))
         value = self._发射表达式(node.值)
+        # 用 str() 包装（兼容所有 exec 环境，runtime 通过重写 str 实现中文显示）
+        shown = ast.Call(
+            func=ast.Name(id="str", ctx=ast.Load()),
+            args=[value], keywords=[],
+        )
         call = ast.Call(
             func=ast.Name(id="print", ctx=ast.Load()),
-            args=[value],
-            keywords=[],
+            args=[shown], keywords=[],
         )
         self._设节点位置(call.func, node)
         n = ast.Expr(value=call)
@@ -998,12 +1018,42 @@ class PythonAstBackend:
         self._设节点位置(n, node)
         return n
 
+    _前置映射: dict[str, str] = {
+        # 纯函数名：永远映射
+        "绝对值": "abs", "四舍五入": "round",
+        "最大值": "max", "最小值": "min", "求和": "sum",
+        "长度": "len", "范围": "range", "枚举": "enumerate",
+        "排序": "sorted", "反转": "reversed",
+        "过滤": "filter", "压缩": "zip",
+        "打印": "print", "输入": "input", "打开": "open",
+        # 类型名：仅在作为函数（构造器）使用时映射
+        # 变量引用时不映射（避免覆盖用户变量名如 "映射"）
+        # Gate B: 标准库函数
+        "读取文本": "读取文本", "写入文本": "写入文本", "追加文本": "追加文本",
+        "判断存在": "判断存在", "建立目录": "建立目录", "列出目录": "列出目录",
+        "路径连接": "路径连接", "文件名": "文件名", "扩展名": "扩展名",
+        "删除文件": "删除文件", "复制文件": "复制文件", "移动文件": "移动文件",
+        "CSV读取": "CSV读取", "CSV写入": "CSV写入",
+        "正则查找": "正则查找", "正则查找全部": "正则查找全部",
+        "正则替换": "正则替换", "正则匹配": "正则匹配",
+        "此刻时间": "此刻时间", "今日日期": "今日日期",
+        "格式时间": "格式时间", "休眠": "休眠",
+        "随机整数": "随机整数", "随机小数": "随机小数",
+        "随机选择": "随机选择", "随机打乱": "随机打乱",
+        "命令行参数": "命令行参数", "环境变量": "环境变量",
+        "目前目录": "目前目录", "退出": "退出", "执行命令": "执行命令",
+        "断言相等": "断言相等", "断言为真": "断言为真", "断言抛出错误": "断言抛出错误",
+    }
+
     def _发射变量引用(self, node: 变量引用IR,
                        ctx: ast.ExprContext = ast.Load()) -> ast.Name:
         # v0.0.9: 类别方法中的 自己 → 内部 self 名
         name = node.名称
         if name == "自己" and self._类别方法self名:
             name = self._类别方法self名
+        # 012: 内置函数名 → Python 标准库名
+        if name in self._前置映射:
+            name = self._前置映射[name]
         n = ast.Name(id=name, ctx=ctx)
         self._设节点位置(n, node)
         return n
@@ -1048,13 +1098,47 @@ class PythonAstBackend:
         return n
 
     def _发射调用(self, node: 调用IR) -> ast.Call:
+        # 成员调用 → 已知别名走运行时解析器，否则发射正常属性访问
+        if isinstance(node.函数, 成员访问IR):
+            成员 = node.函数
+            # 只在成员名是已知别名时使用运行时解析器
+            if 成员.成员 in self._前置映射 or _是否已知别名(成员.成员):
+                obj = self._发射表达式(成员.对象)
+                packed_args = ast.Tuple(
+                    elts=[self._发射表达式(p) for p in node.参数],
+                    ctx=ast.Load(),
+                )
+                # 将制定参数打包为字典传递给 制定参数= 关键字
+                kwargs_dict = ast.Dict(
+                    keys=[ast.Constant(value=名称) for 名称, _ in node.制定参数],
+                    values=[self._发射表达式(值) for _, 值 in node.制定参数],
+                )
+                n = ast.Call(
+                    func=ast.Name(id="_zd_调用成员", ctx=ast.Load()),
+                    args=[obj, ast.Constant(value=成员.成员), packed_args],
+                    keywords=[ast.keyword(arg="制定参数", value=kwargs_dict)] if node.制定参数 else [],
+                )
+                self._设节点位置(n, node)
+                return n
+            # 非别名成员调用：正常的属性访问 + 调用
+            func = self._发射表达式(node.函数)
+            args = [self._发射表达式(p) for p in node.参数]
+            kwargs = [
+                ast.keyword(arg=名称, value=self._发射表达式(值))
+                for 名称, 值 in node.制定参数
+            ]
+            n = ast.Call(func=func, args=args, keywords=kwargs)
+            self._设节点位置(n, node)
+            return n
+
+        # 普通函数调用
         func = self._发射表达式(node.函数)
         args = [self._发射表达式(p) for p in node.参数]
-        keywords = [
+        kwargs = [
             ast.keyword(arg=名称, value=self._发射表达式(值))
             for 名称, 值 in node.制定参数
         ]
-        n = ast.Call(func=func, args=args, keywords=keywords)
+        n = ast.Call(func=func, args=args, keywords=kwargs)
         self._设节点位置(n, node)
         return n
 

@@ -26,6 +26,9 @@ _标点 = {
     "（": PAREN_OPEN, "）": PAREN_CLOSE,
     "，": COMMA, "、": DUN_HAO, "。": PERIOD,
     "：": COLON, "；": SEMICOLON,
+    ",": COMMA, ".": PERIOD, ";": SEMICOLON, ":": COLON,
+    "(": PAREN_OPEN, ")": PAREN_CLOSE,
+    "[": LIST_OPEN, "]": LIST_CLOSE,
 }
 
 
@@ -36,6 +39,14 @@ def 扫描(源码: str) -> list[Token]:
     i = 0
     行 = 1
     列 = 1
+    _有空白 = False  # 前导空白标记：当前 Token 前是否有空白
+
+    def _添加(token_type, 值="", 位置=None, **kw):
+        """添加 Token 并传递前导空白标记。"""
+        nonlocal _有空白
+        tokens.append(Token(token_type=token_type, 值=值, 位置=位置,
+                            前导空白=_有空白, **kw))
+        _有空白 = False
 
     while i < 长度:
         ch = 源码[i]
@@ -43,6 +54,7 @@ def 扫描(源码: str) -> list[Token]:
 
         # 跳过空白
         if ch.isspace():
+            _有空白 = True
             if ch == "\n":
                 行 += 1
                 列 = 1
@@ -62,7 +74,7 @@ def 扫描(源码: str) -> list[Token]:
                 while i < 长度 and 源码[i].isdigit():
                     i += 1
             文本 = 源码[start:i]
-            tokens.append(Token(token_type=NUMBER, 值=文本, 位置=位置))
+            _添加(token_type=NUMBER, 值=文本, 位置=位置)
             列 += (i - start)
             continue
 
@@ -97,10 +109,7 @@ def 扫描(源码: str) -> list[Token]:
             else:
                 i = 开始 + 1  # 未闭合，回到起始
             文本 = "".join(片段)
-            tokens.append(Token(token_type=STRING, 值=文本, 位置=位置))
-            列 += (i - 开始)
-            continue
-            tokens.append(Token(token_type=STRING, 值=文本, 位置=位置))
+            _添加(token_type=STRING, 值=文本, 位置=位置)
             列 += (i - 开始)
             continue
 
@@ -122,7 +131,7 @@ def 扫描(源码: str) -> list[Token]:
                 raise 词法错误("精确名称缺少闭合花括号", 位置)
             i += 1  # 跳过闭合花括号
             文本 = 源码[开始 + 1:i - 1]
-            tokens.append(Token(token_type=IDENTIFIER, 值=文本, 位置=位置, 是否精确=True))
+            _添加(token_type=IDENTIFIER, 值=文本, 位置=位置, 是否精确=True)
             列 += (i - 开始)
             continue
 
@@ -135,7 +144,7 @@ def 扫描(源码: str) -> list[Token]:
 
         if matched_keyword:
             token_type = KW_MAP[matched_keyword]
-            tokens.append(Token(token_type=token_type, 值=matched_keyword, 位置=位置))
+            _添加(token_type=token_type, 值=matched_keyword, 位置=位置)
             i += len(matched_keyword)
             列 += len(matched_keyword)
             continue
@@ -146,19 +155,19 @@ def 扫描(源码: str) -> list[Token]:
             pos = i
             while pos > 0 and 源码[pos-1] in " 	":
                 pos -= 1
-            if pos == 0 or 源码[pos-1] in "\n。；：":
+            if pos == 0 or 源码[pos-1] in "\n。；：，,":
                 start = i
                 while i < 长度 and 源码[i] != "\n":
                     i += 1
                 文本 = 源码[start:i]
-                tokens.append(Token(token_type=COMMENT, 值=文本, 位置=位置))
+                _添加(token_type=COMMENT, 值=文本, 位置=位置)
                 列 += len(文本)
                 continue
 
         # 单字标点
         if ch in _标点:
             token_type = _标点[ch]
-            tokens.append(Token(token_type=token_type, 值=ch, 位置=位置))
+            _添加(token_type=token_type, 值=ch, 位置=位置)
             i += 1
             列 += 1
             if ch == "\n":
@@ -182,8 +191,8 @@ def 扫描(源码: str) -> list[Token]:
             two_ch = 源码[i:i+2]
             if two_ch in _多字符符号:
                 tok_type = _多字符符号[two_ch]
-                tokens.append(Token(token_type=tok_type, 原文=two_ch, 语义值=two_ch,
-                                    跨度=SourceSpan(行, 列, 2)))
+                _添加(token_type=tok_type, 原文=two_ch, 语义值=two_ch,
+                      跨度=SourceSpan(行, 列, 2))
                 i += 2; 列 += 2
                 continue
 
@@ -195,15 +204,15 @@ def 扫描(源码: str) -> list[Token]:
         }
         if ch in _单字符符号:
             tok_type = _单字符符号[ch]
-            tokens.append(Token(token_type=tok_type, 原文=ch, 语义值=ch,
-                                跨度=SourceSpan(行, 列, 1)))
+            _添加(token_type=tok_type, 原文=ch, 语义值=ch,
+                  跨度=SourceSpan(行, 列, 1))
             i += 1; 列 += 1
             continue
 
         # 汉语一元负号：负 紧邻数字 → WORD_NEG（不是 OP_SUB）
         if ch == "负" and i + 1 < 长度 and 源码[i + 1].isdigit():
-            tokens.append(Token(token_type=WORD_NEG, 原文="负", 语义值="-",
-                                跨度=SourceSpan(行, 列, 1)))
+            _添加(token_type=WORD_NEG, 原文="负", 语义值="-",
+                  跨度=SourceSpan(行, 列, 1))
             i += 1
             列 += 1
             continue
@@ -229,12 +238,12 @@ def 扫描(源码: str) -> list[Token]:
                 else:
                     break
             文本 = 源码[buffer_start:i]
-            tokens.append(Token(token_type=IDENTIFIER, 值=文本, 位置=位置))
+            _添加(token_type=IDENTIFIER, 值=文本, 位置=位置)
             列 += (i - buffer_start)
             continue
 
         # 无法识别
         raise 词法错误(f"无法识别的字符：{ch!r}", 位置)
 
-    tokens.append(Token(token_type=EOF, 值="", 位置=源码位置(行=行, 列=列, 索引=长度)))
+    _添加(token_type=EOF, 值="", 位置=源码位置(行=行, 列=列, 索引=长度))
     return tokens

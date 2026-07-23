@@ -41,7 +41,7 @@ from .nametable import 绑定信息
 from .name_lattice import NameLattice
 from .semantic_program import (
     类别方法绑定,
-    SemanticProgram, 语义诊断, 作用域快照,
+    SemanticProgram, 语义诊断, 作用域快照, 已解析引用,
 )
 from .prelude_scope import 是否已知名称
 
@@ -77,6 +77,8 @@ class 语义分析器:
         self.类别字段表: dict[str, set[str]] = {}
         self.入口是异步: bool = False
         self.焦点栈: list[str] = []  # 遍历元素名栈（用于其解析）
+        # 013 阶段 C：引用映射
+        self._引用映射: dict[int, "已解析引用"] = {}
 
     # ── 入口 ────────────────────────────────────────────────
 
@@ -90,6 +92,7 @@ class 语义分析器:
         return SemanticProgram(
             core_ir=self.ir,
             诊断列表=self.诊断列表,
+            引用映射=self._引用映射,
             作用域列表=self.作用域列表,
             类别方法表=self.类别方法表,
             入口是异步=self.入口是异步,
@@ -128,7 +131,7 @@ class 语义分析器:
     # ── 名称注册与解析 ──────────────────────────────────────
 
     def _注册绑定(self, 名称: str, 类型: str, node=None) -> None:
-        """在当前作用域注册一个名称绑定。"""
+        """在当前作用域注册一个名称绑定，并记录绑定定义引用。"""
         if self.格子.检查重复(名称):
             位置 = self._取位置(node) if node else None
             self.诊断列表.append(语义诊断(
@@ -140,9 +143,16 @@ class 语义分析器:
             self.格子.在当前域注册(名称, 绑定信息(
                 名称=名称, 类型=类型, 位置=位置,
             ))
+            # 记录定义绑定
+            if node is not None:
+                self._引用映射[id(node)] = 已解析引用(
+                    名称=名称, 来源="user",
+                    作用域类型=self.格子.当前表.作用域类型,
+                    位置=位置, 名称来源=""
+                )
 
     def _解析名称(self, 名称: str, node) -> bool:
-        """解析名称。其超出遍历范围时给出针对性诊断。"""
+        """解析名称并记录引用映射。"""
         if 名称 == "其" and not self.焦点栈:
             位置 = self._取位置(node) if node else None
             self.诊断列表.append(语义诊断(
@@ -152,15 +162,34 @@ class 语义分析器:
                 位置=位置,
             ))
             return False
+
+        # 记录引用（无论成功或失败前都先占位）
+        node_id = id(node) if node else None
+        位置 = self._取位置(node) if node else None
+        名称来源 = getattr(node, "名称来源", "ORDINARY") if node else "ORDINARY"
+
+        # 尝试作用域解析
         try:
-            self.格子.解析(名称)
+            绑定 = self.格子.解析(名称)
+            if node_id is not None:
+                来源 = "parameter" if 绑定.类型 == "参数" else "user"
+                self._引用映射[node_id] = 已解析引用(
+                    名称=名称, 来源=来源,
+                    作用域类型=self.格子.当前表.作用域类型,
+                    位置=位置, 名称来源=名称来源,
+                )
             return True
         except 语义错误:
             if 是否已知名称(名称):
+                if node_id is not None:
+                    self._引用映射[node_id] = 已解析引用(
+                        名称=名称, 来源="prelude",
+                        作用域类型="",
+                        位置=位置, 名称来源=名称来源,
+                    )
                 return True
-            位置 = self._取位置(node) if node else None
-            # 收集名称来源信息（从 IR 节点的名称来源属性）
-            名称来源 = getattr(node, "名称来源", "ORDINARY") if node else "ORDINARY"
+
+            # 名称不存在
             self.诊断列表.append(语义诊断(
                 f"未定义的名称：「{名称}」",
                 位置=位置,
@@ -197,8 +226,7 @@ class 语义分析器:
         elif isinstance(stmt, 类别方法IR):
             self._分析类别方法(stmt)
         elif isinstance(stmt, 引入IR):
-            # 不注册模块名为普通变量
-            pass
+            self._注册绑定(stmt.模块, "模块", stmt)
         elif isinstance(stmt, 从中引入IR):
             for name in stmt.名称:
                 self._注册绑定(name, "变量", stmt)
@@ -223,7 +251,9 @@ class 语义分析器:
             # 接口名称已在函数/变量定义中注册，此处只验证
             pass
         elif isinstance(stmt, 本地模块引入IR):
-            pass
+            # 有别名时绑定别名，否则绑定模块名
+            绑定名 = stmt.别名 if stmt.别名 else stmt.模块名
+            self._注册绑定(绑定名, "模块", stmt)
         elif isinstance(stmt, 从本地模块引入IR):
             for name in stmt.名称:
                 self._注册绑定(name, "变量", stmt)

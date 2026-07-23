@@ -44,6 +44,7 @@ from .tokens import (
     K_MATCH, K_MATCH_CASES, K_CASE, K_DEFAULT,
     K_AS_ALIAS, K_SCOPE_DECL, K_GLOBAL, K_NONLOCAL, K_CAN, K_DE, K_INTERFACE, K_ENTRY,
 )
+from .prelude_scope import 是否已知名称 as _预置检查
 from .ast_nodes import (
     程序, 句子, 绑定, 空值绑定, 命题绑定,
     变更, 算术变更, 命题变更,
@@ -77,6 +78,7 @@ class 解析器:
         self._循环深度 = 0
         self._待定注释: list[str] = []
         self._焦点元素: str | None = None
+        self._在遍历体内: bool = False
 
     # ==================== 辅助方法 ====================
 
@@ -239,6 +241,22 @@ class 解析器:
             名称 = self._吃().值
             调用节点 = self._解析后缀链(变量(名称, 位置=位置))
             return 表达式语句(动作列表=[调用节点])
+        elif (self._当前().token_type == IDENTIFIER
+              and self._看(1).token_type in (OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD)):
+            # 被运算符拆分的标识符（如 追加 → 追+加，去除两端 → 去+除+两端）
+            # 扫描完整的候选名称后再检查预置名
+            _扫描 = [self._当前().值]
+            _pos = 1
+            while self._看(_pos).token_type in (IDENTIFIER, OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD):
+                _扫描.append(self._看(_pos).值)
+                _pos += 1
+            _全名 = ''.join(_扫描)
+            if _预置检查(_全名):
+                名称 = _全名
+                for _ in range(len(_扫描)):
+                    self._吃()
+                expr = self._解析后缀链(变量(名称, 位置=位置))
+                return 表达式语句(动作列表=[expr])
         elif self._当前().token_type == IDENTIFIER and self._看(1).token_type == K_DE:
             # 成员访问作为语句（如 用户的问候（））
             名称 = self._吃().值
@@ -265,8 +283,44 @@ class 解析器:
             while self._当前().token_type in (IDENTIFIER, OP_ADD, OP_SUB):
                 名称 += self._吃().值
         else:
-            名称令牌 = self._期望(IDENTIFIER, 错误消息="设 后缺少名称")
-            名称 = 名称令牌.值
+            # 名称可能以关键词开头（如「设可以进入复核」→ 可以 是 K_CAN）
+            if (self._当前().token_type in (K_CAN, K_IF, K_WHILE, K_PRINT, K_SET, K_SETUP, K_FROM, K_DELETE)
+                    and self._看(1).token_type == IDENTIFIER
+                    and self._看(2).token_type in (IDENTIFIER, K_AS)):
+                # 第一个关键词很可能是一段中文名的一部分
+                # 持续吞并后续标识符直到遇到「为」
+                名称 = self._吃().值  # 关键词本身
+                while self._当前().token_type == IDENTIFIER:
+                    名称 += self._吃().值
+                if self._匹配(K_AS):
+                    return 绑定(名称=名称, 值=self._解析表达式(), 位置=位置)
+                self._回归(1)
+            else:
+                名称令牌 = self._期望(IDENTIFIER, 错误消息="设 后缺少名称")
+                名称 = 名称令牌.值
+
+        # 检测名称被关键词边界拆分：
+        # 1) 设A为B为C（A+为+B本是一个名称）→ 如「设认为有效为真」
+        # 2) 设A中B为C（A+中+B被拆分）→ 如「设高中生列表为」
+        if (self._当前().token_type == K_AS
+                and self._看(1).token_type == IDENTIFIER
+                and self._看(2).token_type == K_AS):
+            # 名称中"为"被当作关键词边界拆分
+            名称 += self._吃().值   # 吃「为」追加到名称
+            名称 += self._吃().值   # 吃「有效」追加到名称
+            if self._匹配(K_AS):
+                return 绑定(名称=名称, 值=self._解析表达式(), 位置=位置)
+            self._回归(2)
+        elif (self._当前().token_type == K_IN
+              and self._看(1).token_type == IDENTIFIER
+              and self._看(2).token_type == K_AS):
+            # 名称中"中"被当作关键词边界拆分
+            名称 += self._吃().值   # 吃「中」追加到名称
+            名称 += self._吃().值   # 吃(如「生列表」)追加到名称
+            if self._匹配(K_AS):
+                return 绑定(名称=名称, 值=self._解析表达式(), 位置=位置)
+            self._回归(2)
+
         if self._匹配(K_AS):
             return 绑定(名称=名称, 值=self._解析表达式(), 位置=位置)
         elif self._匹配(K_NONE):
@@ -313,7 +367,7 @@ class 解析器:
         条件 = self._解析条件()
         self._跳过逗号()
         self._期望(K_THEN, 错误消息="如果条件后缺少「就」")
-        则体 = self._解析动作直到()
+        则体 = self._解析动作直到(分号终止=True, 分支体=True)
         否则如果列表: list = []
         否则体: list = []
         while self._当前().token_type in (COMMA, SEMICOLON):
@@ -327,43 +381,50 @@ class 解析器:
                         否则条件 = self._解析条件()
                         self._跳过逗号()
                         self._期望(K_THEN, 错误消息="不然如果条件后缺少「就」")
-                        否则体2 = self._解析动作直到()
+                        否则体2 = self._解析动作直到(分号终止=True, 分支体=True)
                         否则如果列表.append((否则条件, 否则体2))
                         continue
                     else:
-                        否则体 = self._解析动作直到()
+                        否则体 = self._解析动作直到(分号终止=True, 分支体=True)
                         break
                 elif self._当前().token_type == K_THEN:
                     self._吃()
-                    否则体 = self._解析动作直到()
+                    否则体 = self._解析动作直到(分号终止=True, 分支体=True)
                     break
                 else:
-                    否则体 = self._解析动作直到()
+                    否则体 = self._解析动作直到(分号终止=True, 分支体=True)
                     break
             else:
                 self._回归(1)
                 break
         return 如果(条件=条件, 则=则体, 否则如果=否则如果列表, 否则=否则体, 位置=位置)
 
-    def _解析动作直到(self, 在定义体: bool = False, 在括号内: bool = False) -> list:
-        """解析动作链。在定义体=True时，不因K_SET/K_MAKE等语句关键字中断。"""
+    def _解析动作直到(self, 在定义体: bool = False, 在括号内: bool = False,
+                     分号终止: bool = False,
+                     分支体: bool = False) -> list:
+        """解析动作链。
+
+        参数：
+          在定义体: 定义体内逗号不因语句关键字中断
+          在括号内: 括号分组内逗号不因语句关键字中断
+          分号终止: 遍历体/循环体/条件体：分号停止收集（由外层函数体处理）
+          分支体:  条件/捕获的分支体内：逗号+语句关键字也停止收集
+        """
         动作列表: list = []
         while self._当前().token_type not in (PERIOD, PAREN_CLOSE, MODULE_CLOSE, COLON, EOF):
+            # 分号终止模式：分号停止收集，由调用者处理
+            if 分号终止 and self._当前().token_type == SEMICOLON:
+                break
             if self._当前().token_type == COMMA:
                 next_type = self._看(1).token_type
-                if 在定义体:
-                    # 定义体内：逗号只是动作分隔符，继续解析
-                    if next_type in (K_ELSE, K_EXCEPT, K_FINALLY, K_CASE, K_DEFAULT):
-                        break  # 控制结构结束，返回给调用者
-                    self._吃()
-                    continue
-                if 在括号内:
-                    # 括号分组内：逗号只是动作分隔符，不因语句关键字中断
-                    if next_type in (K_ELSE, K_EXCEPT, K_FINALLY, K_CASE, K_DEFAULT):
-                        break
-                    self._吃()
-                    continue
-                if next_type in (K_ELSE, K_EXCEPT, K_IF, K_SET, K_MAKE, K_PRINT, K_WHILE, K_FROM, K_TRY, K_BREAK, K_CONTINUE, K_IMPORT, K_DEFINE, K_SETUP, K_DELETE, K_PASS, K_RAISE, K_YIELD, K_AWAIT, K_SCOPE_DECL, K_MATCH, K_MUST, K_MUST_NOT, K_FINALLY, K_CASE, K_DEFAULT):
+                # 控制结构延续标记（不然/如果出错/最后/若为/其余）→ 返回给调用者
+                if next_type in (K_ELSE, K_EXCEPT, K_FINALLY, K_CASE, K_DEFAULT):
+                    break
+                # 分支体内：语句关键字表示上层新动作，停止收集返回给上层
+                if 分支体 and next_type in (K_SET, K_MAKE, K_PRINT, K_IF, K_WHILE, K_FROM, K_TRY,
+                                            K_BREAK, K_CONTINUE, K_IMPORT, K_DEFINE, K_SETUP,
+                                            K_DELETE, K_PASS, K_RAISE, K_YIELD, K_AWAIT,
+                                            K_SCOPE_DECL, K_MATCH):
                     break
                 self._吃()
                 continue
@@ -371,7 +432,7 @@ class 解析器:
             if self._当前().token_type == SEMICOLON:
                 next_type = self._看(1).token_type
                 # 如果后跟控制结构关键词，退出让调用者处理
-                if next_type in (K_ELSE, K_EXCEPT, K_FINALLY, K_CASE, K_DEFAULT, K_IF):
+                if next_type in (K_ELSE, K_EXCEPT, K_FINALLY, K_CASE, K_DEFAULT):
                     break
                 # 否则作为动作分隔符消费并继续
                 self._吃()
@@ -414,14 +475,37 @@ class 解析器:
         self._期望(COMMA, 错误消息="「时」后缺少逗号")
         self._期望(K_ALWAYS, 错误消息="「时」后缺少「一直」")
         self._循环深度 += 1
-        体 = self._解析动作直到()
+        体 = self._解析动作直到(分号终止=True)
         self._循环深度 -= 1
         return 当循环(条件=条件, 体=体, 位置=位置)
 
     # ==================== 遍历 ====================
 
+    def _剥去末尾中(self, 集合):
+        """剥去集合表达式末尾的「中」字。
+
+        Lexer 不再在中文名内部按关键字边界拆分，"中"可能嵌入在标识符末尾。
+        遍历源后预期"中"作为独立 K_IN 存在，但若嵌入标识符，从此处剥离。
+        """
+        from .ast_nodes import 变量
+        if isinstance(集合, 变量) and 集合.名称.endswith("中") and 集合.名称 != "中":
+            集合.名称 = 集合.名称[:-1]
+
     def _解析遍历(self, 位置: 源码位置):
         集合 = self._解析表达式()
+        # 检测集合名被关键词「中」拆分：
+        # 「从高中生列表中」→ 高中 + 中(K_IN) + 生列表(ID) + 中
+        # 扩展集合名为「高中生列表」
+        from .ast_nodes import 变量
+        if (self._当前().token_type == K_IN
+                and self._看(1).token_type == IDENTIFIER
+                and self._看(2).token_type == K_IN
+                and isinstance(集合, 变量)):
+            # 吞下 K_IN + IDENTIFIER，合并到集合名
+            集合.名称 += self._吃().值  # 第一个「中」
+            集合.名称 += self._吃().值  # 第二个 IDENTIFIER（如「生列表」）
+        if self._当前().token_type != K_IN:
+            self._剥去末尾中(集合)
         self._期望(K_IN, 错误消息="遍历源后缺少「中」")
         self._期望(COMMA, 错误消息="「中」后缺少逗号")
         if self._匹配(K_AWAIT_EACH):
@@ -437,14 +521,16 @@ class 解析器:
         self._期望(COMMA, 错误消息="元素名后缺少逗号")
         self._期望(K_THEN, 错误消息="缺少「就」")
         self._循环深度 += 1
-        体 = self._解析动作直到()
+        self._在遍历体内 = True
+        体 = self._解析动作直到(分号终止=True)
+        self._在遍历体内 = False
         self._循环深度 -= 1
         return 遍历(元素=元素令牌.值, 集合=集合, 体=体, 位置=位置)
 
     # ==================== 尝试 ====================
 
     def _解析尝试(self, 位置: 源码位置):
-        体 = self._解析动作直到()
+        体 = self._解析动作直到(分号终止=True)
         异常体: list = []
         异常名: str | None = None
         错误类型处理: list[tuple[str, list]] = []
@@ -476,7 +562,7 @@ class 解析器:
             self._期望(K_THEN, 错误消息="错误类型处理缺少「就」")
             旧上下文 = self._在异常内
             self._在异常内 = True
-            分支体 = self._解析动作直到()
+            分支体 = self._解析动作直到(分号终止=True)
             self._在异常内 = 旧上下文
             错误类型处理.append((错误类型, 分支体))
             self._匹配(SEMICOLON, COMMA)
@@ -491,14 +577,14 @@ class 解析器:
             self._期望(K_THEN, 错误消息="「如果出错」后缺少「就」")
             旧上下文 = self._在异常内
             self._在异常内 = True
-            异常体 = self._解析动作直到()
+            异常体 = self._解析动作直到(分号终止=True)
             self._在异常内 = 旧上下文
             self._匹配(SEMICOLON, COMMA)
 
         if self._匹配(K_FINALLY):
             self._跳过逗号()
             self._期望(K_FINALLY_DO, 错误消息="「无论是否出错」后缺少「最后」")
-            最终体 = self._解析动作直到()
+            最终体 = self._解析动作直到(分号终止=True)
 
         return 尝试(体=体, 异常体=异常体, 异常名=异常名,
                    错误类型处理=错误类型处理, 有泛化处理=有泛化处理,
@@ -551,7 +637,7 @@ class 解析器:
             self._期望(COLON, 错误消息="「如下」后缺少：")
         旧上下文 = self._在定义内
         self._在定义内 = True
-        体 = self._解析动作直到(在定义体=True)
+        体 = self._解析动作直到()
         self._在定义内 = 旧上下文
         return 函数定义(名称=名称, 参数=参数, 体=体, 参数默认值=参数默认值, 单表达式=False, 位置=位置)
 
@@ -708,6 +794,15 @@ class 解析器:
             self._吃()
         return 运行入口(体=体, 位置=位置)
 
+    @staticmethod
+    def _是终止性语句(节点) -> bool:
+        """检查一条语句是否是终止性语句（以所得/报错/原样报出/跳出/继续）。
+
+        终止性语句出现在函数体末尾时，后续语句逻辑上属于函数外部。
+        """
+        from .ast_nodes import 以所得, 报错, 原样报出, 跳出, 继续
+        return isinstance(节点, (以所得, 报错, 原样报出, 跳出, 继续))
+
     # ==================== 第二批：定义 / 设置 / 类别 ====================
 
     def _解析新定义(self, 位置: 源码位置):
@@ -731,19 +826,23 @@ class 解析器:
         self._期望(COLON, 错误消息="「如下」后缺少：")
         旧上下文 = self._在定义内
         self._在定义内 = True
-        # 定义体：收集多句体（当不是嵌套定义时，句号作为体分隔符不断消费）
+        # 定义体：支持多段（多句号），每段后检查终止性语句
         体: list = []
         while True:
-            部分体 = self._解析动作直到(在定义体=True)
+            部分体 = self._解析动作直到()
             if 部分体:
                 体.extend(部分体)
-            # 句号是体分句边界：消费句号并继续收集
-            # 仅当从顶层调用且后续语句是有效体语句时继续
+                # 终止性语句（以所得/报错/依次给出）后函数体结束
+                if self._是终止性语句(部分体[-1]):
+                    if self._当前().token_type == PERIOD:
+                        self._吃()
+                    break
+            # 句号是体分句边界：消费句号并在下一轮继续收集
             if self._当前().token_type == PERIOD:
+                self._吃()
                 if not 旧上下文:
-                    self._吃()  # 消费句号，继续
-                    # 检查是否遇到新的顶层语句（入口、接口、定义等）
-                    if self._当前().token_type in (K_ENTRY, K_INTERFACE, K_DEFINE, K_SETUP, K_SET, K_IMPORT, K_FROM):
+                    # 非嵌套定义：检查是否遇到新的顶层定义
+                    if self._当前().token_type in (K_ENTRY, K_INTERFACE, K_DEFINE, K_SETUP):
                         break
                     continue
                 break  # 嵌套定义：句号终止体
@@ -773,13 +872,17 @@ class 解析器:
         self._在定义内 = True
         体: list = []
         while True:
-            部分体 = self._解析动作直到(在定义体=True)
+            部分体 = self._解析动作直到()
             if 部分体:
                 体.extend(部分体)
+                if self._是终止性语句(部分体[-1]):
+                    if self._当前().token_type == PERIOD:
+                        self._吃()
+                    break
             if self._当前().token_type == PERIOD:
+                self._吃()
                 if not 旧上下文:
-                    self._吃()
-                    if self._当前().token_type in (K_DEFINE, K_SETUP, K_SET, K_ENTRY, K_INTERFACE):
+                    if self._当前().token_type in (K_DEFINE, K_SETUP, K_ENTRY, K_INTERFACE):
                         break
                     continue
                 break
@@ -1102,7 +1205,7 @@ class 解析器:
     }
 
     def _解析表达式(self):
-        return self._解析比较表达式()
+        return self._解析条件()
 
     def _解析比较表达式(self):
         left = self._解析成员表达式()
@@ -1226,9 +1329,16 @@ class 解析器:
                     self._期望(IDENTIFIER, 错误消息="「的」后缺少成员名")
                 # 处理被关键字边界拆分的复合成员名（仅当成员名为单字时，如 增 + 加 → 增加）
                 if len(成员名) == 1 and ord(成员名) >= 0x4e00:
-                    while self._当前().token_type in (OP_ADD, OP_SUB):
+                    while self._当前().token_type in (OP_ADD, OP_SUB, OP_MOD, OP_DIV):
                         后半 = self._吃().值
                         成员名 += 后半
+                    # 运算符后继续收集后续标识符（如 除 + 两端 → 去除两端）
+                    while self._当前().token_type in (IDENTIFIER, K_AS, K_ITS):
+                        成员名 += self._吃().值
+                # 跨关键字边界继续收集（如 转为小写 为 是关键词的一部分）
+                # 注意：K_IN（中）不可包含——它是从...中遍历的结束标记
+                while self._当前().token_type in (IDENTIFIER, K_AS, K_ITS, K_FROM):
+                    成员名 += self._吃().值
                 left = 成员访问(对象=left, 成员=成员名, 位置=left.位置)
             elif tok.token_type == STRING:
                 # 【内容】在表达式之后 → 字符串键下标
@@ -1342,6 +1452,19 @@ class 解析器:
                 return 错误文本(位置=位置)
             if 名称 in ("错误", "错误内容") and not self._在异常内:
                 raise 语法错误(f"「{名称}」只能在如果出错的范围内使用", 位置)
+            # 合并被运算符拆分的标识符（如「去除两端」→去+除+两端）
+            if (len(名称) == 1 and ord(名称) >= 0x4e00
+                    and self._当前().token_type in (OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD)):
+                _候选 = [名称, self._当前().值]
+                _idx = 1
+                while self._看(_idx).token_type in (IDENTIFIER, OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD):
+                    _候选.append(self._看(_idx).值)
+                    _idx += 1
+                _全名 = ''.join(_候选)
+                if _预置检查(_全名):
+                    名称 = _全名
+                    for _ in range(len(_候选) - 1):
+                        self._吃()
             return 变量(名称, 位置=位置, 名称来源="ORDINARY")
         elif self._当前().token_type in (OP_ADD, OP_SUB, OP_MUL, OP_DIV, OP_MOD):
             # 运算符字符作为标识符使用（如函数名"加倍"）
@@ -1350,6 +1473,15 @@ class 解析器:
             while self._当前().token_type in (IDENTIFIER, OP_ADD, OP_SUB):
                 名称 += self._吃().值
             return 变量(名称, 位置=位置, 名称来源="ORDINARY")
+        elif self._当前().token_type in (K_FROM, K_WHILE, K_CAN, K_SET, K_SETUP, K_DELETE, K_PRINT, K_IF):
+            # 表达式上下文中的关键词：它们可能是中文名的起始字
+            # 例如「从属关系」中「从」是 K_FROM，「当日」中「当」是 K_WHILE
+            if self._看(1).token_type == IDENTIFIER:
+                名称 = self._吃().值  # 关键词本身
+                while self._当前().token_type == IDENTIFIER:
+                    名称 += self._吃().值
+                return 变量(名称, 位置=位置, 名称来源="ORDINARY")
+            raise 语法错误(f"期望表达式，实际得到 {self._当前().token_type}({self._当前().值!r})", 位置)
         elif self._当前().token_type == K_AWAIT:
             if not self._在定义内:
                 raise 语法错误("「等待」表达式只能在定义内使用", 位置)

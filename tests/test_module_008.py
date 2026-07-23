@@ -93,7 +93,7 @@ class TestModuleLoader:
     def test_cycle_import_detected(self):
         """循环引入在周道层拒绝。"""
         loader = self._loader()
-        with pytest.raises((循环引入错误, 周道错误, 语义错误)):
+        with pytest.raises(循环引入错误, match="检测到循环引入"):
             loader.load_module("cycle_a", FIXTURE_DIR)
 
     def test_module_cache(self):

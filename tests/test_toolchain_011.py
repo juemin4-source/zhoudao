@@ -77,7 +77,8 @@ class TestLSP:
     def test_悬停(self):
         """悬停返回 token 信息。"""
         r = self.lsp._悬停({"textDocument": {"uri": self.uri}, "position": {"line": 0, "character": 1}})
-        assert r is not None or True  # 跳转定义可能返回None，接受 and "contents" in r
+        # 跳转定义可能返回None，接受
+        assert r is None or "contents" in r
 
     def test_补全(self):
         """补全返回 items。"""
@@ -87,7 +88,7 @@ class TestLSP:
     def test_跳转定义(self):
         """跳转定义返回位置。"""
         r = self.lsp._跳转定义({"textDocument": {"uri": self.uri}, "position": {"line": 0, "character": 1}})
-        assert r is not None or True  # 跳转定义可能返回None，接受
+        assert r is None or isinstance(r, dict)  # 跳转定义可能返回None，接受
 
     def test_查找引用(self):
         """查找引用返回 locations。"""
