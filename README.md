@@ -4,7 +4,14 @@
 
 周道是一套完整的**中文编程语言原型**——它使用现代中文句法、数学表达和中文标点，先解析为独立 AST，再转译到标准 Python 执行。它借用 CPython 的运行时与生态，但不创造自己的虚拟机。
 
-`# 你好，世界`（Python）→ `显示【你好，世界】`（周道）
+```text
+定义斐波那契（序号）如下：
+  如果序号 <= 1，就以序号为所得；
+  以斐波那契（序号-1）+斐波那契（序号-2）为所得。
+
+运行如下：
+  设索引为0，当索引<15时，一直显示斐波那契（索引），并使索引加1。
+```
 
 ---
 
@@ -20,28 +27,27 @@
 
 ---
 
-## 一句话示例
+## 示例一览
 
-```text
-设 数量 为 3
-当 数量 > 0 时：
-  显示 数量
-  使 数量 减 1
-```
+周道自带 **10 个渐进式示例项目**，覆盖从基础到进阶的全部语法特性：
 
-```text
-设 分数 为 85
-如果 分数 >= 90：
-  显示【优秀】
-不然，如果 分数 >= 70：
-  显示【良好】
-不然：
-  显示【加油】
-```
+| 项目 | 说明 | 语法亮点 |
+|------|------|---------|
+| `projects/p1-text-processor/` | 文本处理 | 函数定义、字符串操作、遍历 |
+| `projects/p2-multi-file/` | 多文件模块 | 模块引入、跨文件调用 |
+| `projects/p3-state-machine/` | 红绿灯状态机 | 类别定义、状态切换、`自己` |
+| `projects/p4-error-handler/` | 错误处理 | `尝试`、`报错`、错误类型 |
+| `projects/p5-generator-pipeline/` | 生成器流水线 | `依次给出`、惰性求值 |
+| `projects/p6-async/` | 异步消息 | `等待`、`每等到一项记作` |
+| `projects/p7-python-interop/` | Python 互操作 | 引入 Python 标准库 |
+| `projects/p8-word-frequency/` | 词频统计 | 映射（字典）、方法链 |
+| `projects/p9-table-cleaner/` | CSV 清洗 | 字符串分割、逐行处理 |
+| `projects/p10-list-cleaner/` | 列表操作 | `的`方法调用、排序、复制 |
 
-```text
-从【张三、李四、王五】中，每取一项记作 姓名：
-  显示 姓名
+```bash
+# 运行任一项目
+python -m 周道 projects/p1-text-processor/main.zd
+python -m 周道 projects/p3-state-machine/traffic.zd
 ```
 
 ---
@@ -52,13 +58,13 @@
 pip install -e .          # 安装周道
 
 # 运行 .zd 文件
-python -m 周道 examples/counter.zd
+python -m 周道 projects/p1-text-processor/main.zd
 
 # 仅查看生成的 Python 代码
-python -m 周道 examples/counter.zd --emit
+python -m 周道 projects/p1-text-processor/main.zd --emit
 
 # 仅检查语法
-python -m 周道 examples/counter.zd --check
+python -m 周道 projects/p1-text-processor/main.zd --check
 ```
 
 ### 语法一览
@@ -136,12 +142,16 @@ python -m 周道 file.zd --check  # 仅检查语法
 │   ├── runner.py             # 运行器与 CLI
 │   ├── stdlib.py             # 中文标准库
 │   └── ...
-├── tests/                    # 验收测试
-├── projects/                 # 示例项目
+├── projects/                 # 10 个渐进式示例项目
 │   ├── p1-text-processor/    # 文本处理
-│   ├── p2-multi-file/        # 多文件
-│   ├── p3-state-machine/     # 状态机
+│   ├── p2-multi-file/        # 多文件模块
+│   ├── p3-state-machine/     # 红绿灯状态机
+│   ├── p4-error-handler/     # 错误处理
+│   ├── p5-generator-pipeline/# 生成器流水线
+│   ├── p6-async/             # 异步消息
+│   ├── p7-python-interop/    # Python 互操作
 │   └── ...
+├── tests/                    # 验收测试
 ├── docs/                     # 设计与规范文档
 └── README.md
 ```
